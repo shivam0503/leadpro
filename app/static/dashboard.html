@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LeadPro CRM Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root{--bg:#07090f;--card:#0e1118;--card2:#131720;--hover:#161b27;--border:#1c2235;--borderlt:#232b42;--accent:#25D366;--accent2:#128C7E;--accentg:rgba(37,211,102,.12);--hi:#f1f5f9;--mid:#8899b0;--lo:#374357;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--yellow:#eab308;--purple:#a855f7;--font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);background:var(--bg);color:var(--hi);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--borderlt);border-radius:4px}
+button,input,select,textarea{font-family:var(--font-body)}
+
+/* ── Login ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--card);border:1px solid var(--borderlt);border-radius:20px;padding:40px;width:380px;max-width:94vw}
+.login-logo{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--hi);margin-bottom:28px;display:flex;align-items:center;gap:10px}
+.login-logo span{color:var(--accent)}
+.fg{margin-bottom:14px}
+.fg label{font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px}
+.fg input{width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:11px 14px;color:var(--hi);font-size:13px;outline:none;transition:.2s}
+.fg input:focus{border-color:var(--accent)}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;transition:.2s}
+.login-btn:hover{background:var(--accent2)}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center}
+.login-hint{font-size:11px;color:var(--mid);text-align:center;margin-top:14px}
+
+/* ── Layout ── */
+#app{display:none;min-height:100vh}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:var(--card);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sb-logo{padding:18px 20px;border-bottom:1px solid var(--border);font-family:var(--font-head);font-size:16px;font-weight:800}
+.sb-logo span{color:var(--accent)}
+.sb-company{padding:10px 16px;font-size:11px;color:var(--mid);background:var(--card2);border-bottom:1px solid var(--border)}
+.sb-company b{color:var(--hi)}
+.nav-section{padding:8px 0}
+.nav-lbl{font-size:9px;font-weight:700;color:var(--lo);text-transform:uppercase;letter-spacing:1.4px;padding:7px 18px 3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:12.5px;color:var(--mid);cursor:pointer;transition:.15s;position:relative}
+.nav-item:hover{color:var(--hi);background:var(--hover)}
+.nav-item.active{color:var(--accent);background:rgba(37,211,102,.07)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-item i{width:16px;text-align:center;font-size:12px}
+.nbadge{margin-left:auto;background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px}
+.main{overflow-y:auto}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.tb-title{font-family:var(--font-head);font-size:14px;font-weight:700;flex:1}
+.content{padding:22px}
+.page{display:none}.page.active{display:block}
+
+/* ── Cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:50%;transform:translate(20px,-20px)}
+.kpi.g::before{background:radial-gradient(circle,rgba(37,211,102,.2),transparent)}
+.kpi.b::before{background:radial-gradient(circle,rgba(59,130,246,.18),transparent)}
+.kpi.y::before{background:radial-gradient(circle,rgba(234,179,8,.18),transparent)}
+.kpi.p::before{background:radial-gradient(circle,rgba(168,85,247,.18),transparent)}
+.kpi-icon{font-size:18px;margin-bottom:10px}
+.kpi-val{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1}
+.kpi-lbl{font-size:10px;color:var(--mid);margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;margin-bottom:16px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap}
+.card-title{font-family:var(--font-head);font-size:14px;font-weight:700}
+
+/* ── Buttons ── */
+.btn{border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-g{background:transparent;border:1px solid var(--borderlt);color:var(--mid)}.btn-g:hover{color:var(--hi);border-color:var(--mid)}
+.btn-b{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue)}
+.btn-r{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ── Table ── */
+.tw{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 12px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--lo);background:var(--card2);border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:.12s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--hover)}
+td{padding:11px 12px;font-size:12px;vertical-align:middle}
+.td-b{font-weight:600}.td-s{font-size:10px;color:var(--mid);margin-top:2px}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:9.5px;font-weight:700;text-transform:uppercase}
+.badge::before{content:'';width:4px;height:4px;border-radius:50%}
+.badge.g{background:rgba(34,197,94,.1);color:var(--green)}.badge.g::before{background:var(--green)}
+.badge.r{background:rgba(239,68,68,.1);color:var(--red)}.badge.r::before{background:var(--red)}
+.badge.y{background:rgba(234,179,8,.1);color:var(--yellow)}.badge.y::before{background:var(--yellow)}
+.badge.b{background:rgba(59,130,246,.1);color:var(--blue)}.badge.b::before{background:var(--blue)}
+.badge.p{background:rgba(168,85,247,.1);color:var(--purple)}.badge.p::before{background:var(--purple)}
+
+/* ── Chat UI ── */
+.chat-wrap{display:grid;grid-template-columns:320px 1fr;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;height:calc(100vh - 200px)}
+.chat-list{border-right:1px solid var(--border);overflow-y:auto}
+.chat-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s}
+.chat-item:hover,.chat-item.active{background:var(--hover)}
+.chat-item.active{border-left:3px solid var(--accent)}
+.ci-name{font-weight:600;font-size:13px;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between}
+.ci-preview{font-size:11px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-time{font-size:10px;color:var(--lo)}
+.ci-source{font-size:9px;padding:1px 6px;border-radius:99px;font-weight:700}
+.ci-source.form{background:rgba(59,130,246,.1);color:var(--blue)}
+.ci-source.wa{background:rgba(37,211,102,.1);color:var(--accent)}
+.chat-main{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.chat-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0;scroll-behavior:smooth}
+.chat-messages::-webkit-scrollbar{width:6px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.chat-messages::-webkit-scrollbar-thumb:hover{background:var(--mid)}
+.chat-list::-webkit-scrollbar{width:5px}
+.chat-list::-webkit-scrollbar-track{background:transparent}
+.chat-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.msg{max-width:70%;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.5}
+.msg.in{background:var(--card2);align-self:flex-start;border-bottom-left-radius:2px}
+.msg.out{background:var(--accent2);color:#fff;align-self:flex-end;border-bottom-right-radius:2px}
+.msg.out.ai{background:rgba(37,211,102,.15);color:var(--hi);border:1px solid rgba(37,211,102,.2)}
+.msg-meta{font-size:9px;color:var(--mid);margin-top:4px}
+.msg.out .msg-meta{color:rgba(255,255,255,.7)}
+.chat-input{padding:14px 16px;border-top:1px solid var(--border);background:var(--card);display:flex;gap:8px;flex-shrink:0}
+.chat-input textarea{flex:1;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px 13px;color:var(--hi);font-size:13px;resize:none;outline:none;height:42px}
+.chat-input textarea:focus{border-color:var(--accent)}
+.chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:13px;flex-direction:column;gap:8px}
+.msg.out.ai .msg-meta{color:var(--mid)}
+
+/* ── AI Toggle ── */
+.ai-toggle{display:flex;align-items:center;gap:8px;background:var(--card2);border-radius:8px;padding:8px 14px;border:1px solid var(--border)}
+.ai-toggle span{font-size:12px;color:var(--mid)}
+.toggle{position:relative;width:38px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;cursor:pointer;inset:0;background:var(--borderlt);border-radius:99px;transition:.3s}
+.tslider::before{position:absolute;content:'';height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.tslider{background:var(--accent)}
+.toggle input:checked+.tslider::before{transform:translateX(18px)}
+
+/* ── Widget Setup ── */
+.code-box{background:#0d0f16;border-radius:10px;padding:20px;font-family:'Courier New',monospace;font-size:12px;color:#e2e8f0;border:1px solid var(--border);position:relative;overflow-x:auto}
+.code-box .tag{color:#93c5fd}.code-box .attr{color:#86efac}.code-box .val{color:#fde68a}
+.copy-btn{position:absolute;top:10px;right:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--borderlt);border-radius:14px;width:100%;max-width:500px;max-height:90vh;display:flex;flex-direction:column}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-hdr h3{font-family:var(--font-head);font-size:15px;font-weight:700}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.close-x{background:var(--card2);border:1px solid var(--border);color:var(--mid);width:28px;height:28px;border-radius:50%;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--borderlt);border-radius:10px;padding:12px 18px;font-size:13px;transform:translateY(80px);transition:.3s;z-index:9999}
+#toast.show{transform:translateY(0)}
+#toast.ok{border-color:var(--green);color:var(--green)}
+#toast.err{border-color:var(--red);color:var(--red)}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:48px 20px;color:var(--mid);font-size:13px}
+.empty-state i{font-size:36px;margin-bottom:12px;display:block;opacity:.35}
+select.sel{background:var(--card);border:1px solid var(--borderlt);color:var(--mid);border-radius:8px;padding:7px 10px;font-size:11px;outline:none;cursor:pointer}
+
+/* ── Widget Mode Selector ── */
+.mode-opt{background:var(--card2);border:1px solid var(--borderlt);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:.15s}
+.mode-opt:hover{border-color:var(--mid)}
+.mode-opt.active{border:2px solid var(--accent);background:rgba(37,211,102,.04)}
+
+/* ── Widget Preview ── */
+.widget-preview{background:#1a2235;border-radius:10px;min-height:180px;position:relative;overflow:hidden;border:1px solid var(--border);margin-top:4px}
+.widget-preview-content{padding:16px;font-size:12px;color:var(--mid)}
+.float-stack{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.float-btn-row{display:flex;align-items:center;gap:8px}
+.float-lbl{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--mid);white-space:nowrap}
+.wa-fab{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(37,211,102,.3)}
+.form-fab{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(99,102,241,.3)}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Lead<span>Pro</span> <span style="font-size:12px;color:var(--mid);font-weight:400">CRM</span></div>
+    <div class="fg"><label>Company Slug</label><input id="l-slug" placeholder="careerlauncher" value=""/></div>
+    <div class="fg"><label>Email</label><input id="l-email" type="email" placeholder="admin@company.com"/></div>
+    <div class="fg"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••"/></div>
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div id="l-err" class="login-err"></div>
+    <div class="login-hint">Super admin? Use <b>/super-login</b> endpoint</div>
+  </div>
+</div>
+
+<!-- App Shell -->
+<div id="app">
+<div class="shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sb-logo">Lead<span>Pro</span></div>
+    <div class="sb-company" id="sb-company-info">Loading...</div>
+    <div class="nav-section">
+      <div class="nav-lbl">Overview</div>
+      <div class="nav-item active" onclick="goPage('dashboard')"><i class="fa fa-gauge"></i> Dashboard</div>
+      <div class="nav-item" onclick="goPage('leads')"><i class="fa fa-users"></i> All Leads <span class="nbadge" id="nb-leads">0</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-lbl">Communication</div>
+      <div class="nav-item" onclick="goPage('conversations')"><i class="fa fa-comments"></i> Conversations</div>
+      <div class="nav-item" onclick="goPage('widget')"><i class="fa fa-code"></i> Widget Setup</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-lbl">Settings</div>
+      <div class="nav-item" onclick="goPage('ai-training')"><i class="fa fa-brain"></i> AI Training</div>
+      <div class="nav-item" onclick="goPage('team')"><i class="fa fa-user-group"></i> Team</div>
+      <div class="nav-item" onclick="goPage('settings')"><i class="fa fa-gear"></i> Settings</div>
+    </div>
+    <div style="margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)">
+      <button class="btn btn-g btn-sm" style="width:100%" onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="tb-title">Dashboard</div>
+      <div class="ai-toggle">
+        <i class="fa fa-robot" style="color:var(--accent)"></i>
+        <span>AI Auto-Reply</span>
+        <label class="toggle">
+          <input type="checkbox" id="ai-toggle-cb" onchange="toggleAI(this.checked)">
+          <span class="tslider"></span>
+        </label>
+        <span id="ai-status-text" style="font-size:11px;color:var(--accent)">ON</span>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="refreshPage()"><i class="fa fa-rotate"></i></button>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══════ DASHBOARD ═══════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-row">
+          <div class="kpi g"><div class="kpi-icon">👥</div><div class="kpi-val" id="kv-total">—</div><div class="kpi-lbl">Total Leads</div></div>
+          <div class="kpi b"><div class="kpi-icon">🔥</div><div class="kpi-val" id="kv-hot">—</div><div class="kpi-lbl">Hot Leads</div></div>
+          <div class="kpi y"><div class="kpi-icon">📋</div><div class="kpi-val" id="kv-form">—</div><div class="kpi-lbl">Form Leads</div></div>
+          <div class="kpi p"><div class="kpi-icon">💬</div><div class="kpi-val" id="kv-wa">—</div><div class="kpi-lbl">WhatsApp Leads</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title">Recent Leads</div>
+            <button class="btn btn-g btn-sm" onclick="goPage('leads')">View All →</button>
+          </div>
+          <div class="tw"><table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Source</th><th>Status</th><th>Score</th><th>Last Message</th><th>Time</th></tr></thead>
+            <tbody id="recent-leads-body"><tr><td colspan="7" class="empty-state"><i class="fa fa-spinner fa-spin"></i></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══════ ALL LEADS ═══════ -->
+      <div class="page" id="page-leads">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <input id="leads-search" placeholder="Search name, phone, email..." style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--hi);font-size:12px;outline:none;width:220px" oninput="loadLeads()">
+          <select class="sel" id="leads-status" onchange="loadLeads()">
+            <option value="">All Status</option>
+            <option>new</option><option>contacted</option><option>replied</option><option>demo</option><option>closed</option><option>lost</option>
+          </select>
+          <select class="sel" id="leads-source" onchange="loadLeads()">
+            <option value="">All Sources</option>
+            <option value="website_form">Form</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="whatsapp_widget">Widget</option>
+          </select>
+          <div style="margin-left:auto">
+            <button class="btn btn-p btn-sm" onclick="openAddLead()"><i class="fa fa-plus"></i> Add Lead</button>
+          </div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Course</th><th>Source</th><th>Status</th><th>Score</th><th>Counsellor</th><th>Last Message</th><th>Actions</th></tr></thead>
+          <tbody id="leads-body"><tr><td colspan="10" class="empty-state"><i class="fa fa-spinner fa-spin"></i></td></tr></tbody>
+        </table></div>
+        <div id="leads-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--mid)"></div>
+      </div>
+
+      <!-- ═══════ CONVERSATIONS ═══════ -->
+      <div class="page" id="page-conversations">
+        <div class="chat-wrap">
+          <div class="chat-list" id="chat-list">
+            <div style="padding:12px;border-bottom:1px solid var(--border)">
+              <input id="chat-search" placeholder="Search..." style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--hi);font-size:12px;outline:none" oninput="filterChats()">
+            </div>
+            <div id="chat-list-items"></div>
+          </div>
+          <div class="chat-main" id="chat-main">
+            <div class="chat-empty">
+              <i class="fa fa-comments" style="font-size:40px;opacity:.2"></i>
+              <span>Select a conversation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ WIDGET SETUP ═══════ -->
+      <div class="page" id="page-widget">
+
+        <!-- Step 1: Choose widget mode -->
+        <div class="card">
+          <div class="card-hdr">
+            <div>
+              <div class="card-title">🔌 Choose Widget Type</div>
+              <div style="font-size:12px;color:var(--mid);margin-top:4px">Select which widget(s) appear on your website</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+            <div class="mode-opt active" id="wo-both" onclick="setWidgetMode('both')">
+              <div style="display:flex;justify-content:center;gap:6px;margin-bottom:10px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.528 5.845L0 24l6.335-1.504C8.036 23.45 9.978 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.846 0-3.574-.492-5.065-1.349l-.361-.214-3.762.893.952-3.665-.235-.374A9.95 9.95 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#6366f1"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </div>
+              <div style="font-size:13px;font-weight:700;color:var(--hi)">Both Widgets</div>
+              <div style="font-size:11px;color:var(--mid);margin-top:4px">WhatsApp + Lead Form</div>
+              <div style="font-size:10px;color:var(--accent);margin-top:6px;font-weight:600">Recommended</div>
+            </div>
+            <div class="mode-opt" id="wo-whatsapp" onclick="setWidgetMode('whatsapp')">
+              <div style="display:flex;justify-content:center;gap:6px;margin-bottom:10px">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.528 5.845L0 24l6.335-1.504C8.036 23.45 9.978 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.846 0-3.574-.492-5.065-1.349l-.361-.214-3.762.893.952-3.665-.235-.374A9.95 9.95 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              </div>
+              <div style="font-size:13px;font-weight:700;color:var(--hi)">WhatsApp Only</div>
+              <div style="font-size:11px;color:var(--mid);margin-top:4px">Direct chat button</div>
+              <div style="font-size:10px;color:var(--mid);margin-top:6px">Leads via WA messages</div>
+            </div>
+            <div class="mode-opt" id="wo-form" onclick="setWidgetMode('form')">
+              <div style="display:flex;justify-content:center;gap:6px;margin-bottom:10px">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#6366f1"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </div>
+              <div style="font-size:13px;font-weight:700;color:var(--hi)">Form Only</div>
+              <div style="font-size:11px;color:var(--mid);margin-top:4px">Enquiry form popup</div>
+              <div style="font-size:10px;color:var(--mid);margin-top:6px">Leads via form submissions</div>
+            </div>
+          </div>
+
+          <!-- Live Preview -->
+          <div style="font-size:11px;font-weight:700;color:var(--lo);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Preview</div>
+          <div class="widget-preview">
+            <div class="widget-preview-content">Your website content appears here...</div>
+            <div class="float-stack" id="widget-float-preview"></div>
+          </div>
+        </div>
+
+        <!-- Step 2: Embed code -->
+        <div class="card">
+          <div class="card-hdr">
+            <div>
+              <div class="card-title">📋 Step 1 — Copy embed code</div>
+              <div style="font-size:12px;color:var(--mid);margin-top:4px">Paste before &lt;/body&gt; on your website</div>
+            </div>
+          </div>
+          <div class="code-box" id="widget-code-box">
+            <button class="copy-btn" onclick="copyWidgetCode()">Copy</button>
+            <span id="widget-code-content">Loading...</span>
+          </div>
+          <div style="background:var(--card2);border-radius:8px;padding:14px;font-size:12px;color:var(--mid);line-height:1.8;border:1px solid var(--border);margin-top:12px" id="widget-mode-info">
+            Works on any website: WordPress, Wix, Shopify, HTML, React.
+          </div>
+        </div>
+
+        <!-- Step 3: Webhook -->
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">📱 Step 2 — Configure WhatsApp Webhook</div></div>
+          <div style="background:var(--card2);border-radius:8px;padding:14px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--mid);margin-bottom:8px">Set this URL in your Twilio console → WhatsApp Sandbox → "When a message comes in":</div>
+            <div class="code-box" style="padding:12px">
+              <button class="copy-btn" onclick="copyWebhookUrl()">Copy</button>
+              <span id="webhook-url" style="color:var(--accent)">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════ AI TRAINING ═══════ -->
+      <div class="page" id="page-ai-training">
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-hdr">
+            <div class="card-title">🌐 AI Response Language</div>
+            <div id="lang-badge" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.25)">
+              <span style="width:5px;height:5px;border-radius:50%;background:#818cf8;display:inline-block"></span>
+              <span id="lang-badge-text">Loading...</span>
+            </div>
+          </div>
+          <div style="padding:16px">
+            <p style="font-size:12px;color:var(--mid);margin-bottom:14px">Switch the AI response language with one click.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+              <div id="lang-card-hinglish" onclick="switchLanguage('hinglish')" style="background:var(--card2);border:2px solid rgba(99,102,241,0.5);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;position:relative">
+                <div id="lang-check-hinglish" style="position:absolute;top:10px;right:10px;width:18px;height:18px;background:#6366f1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">&#10003;</div>
+                <div style="font-size:20px;margin-bottom:6px">&#127470;&#127475;</div>
+                <div style="font-size:13px;font-weight:700;color:var(--hi);margin-bottom:3px">Hinglish</div>
+                <div style="font-size:11px;color:var(--mid);line-height:1.4">Hindi + English mix — warm &amp; conversational</div>
+              </div>
+              <div id="lang-card-english" onclick="switchLanguage('english')" style="background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;position:relative">
+                <div id="lang-check-english" style="position:absolute;top:10px;right:10px;width:18px;height:18px;background:#6366f1;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:10px;color:#fff">&#10003;</div>
+                <div style="font-size:20px;margin-bottom:6px">&#127468;&#127463;</div>
+                <div style="font-size:13px;font-weight:700;color:var(--hi);margin-bottom:3px">English</div>
+                <div style="font-size:11px;color:var(--mid);line-height:1.4">English only — professional tone always</div>
+              </div>
+            </div>
+            <div id="lang-status" style="font-size:12px;color:var(--mid);min-height:18px"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">📝 Train with custom text</div></div>
+            <div style="padding:16px">
+              <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Add FAQs, pricing, course details, policies, or any custom info.</p>
+              <input id="train-title" placeholder="Title (e.g., CAT Course Pricing)" style="width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--hi);font-size:13px;margin-bottom:8px;outline:none">
+              <textarea id="train-content" placeholder="Paste your content here..." style="width:100%;height:200px;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--hi);font-size:13px;resize:vertical;outline:none;font-family:inherit;line-height:1.5"></textarea>
+              <button class="btn btn-p" style="margin-top:8px;width:100%" onclick="trainWithText()"><i class="fa fa-plus-circle"></i> Add to Knowledge Base</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">🤖 Custom AI prompt</div></div>
+            <div style="padding:16px">
+              <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Set a custom system prompt to control AI personality and tone.</p>
+              <textarea id="ai-persona" placeholder="Example:&#10;You are a friendly counsellor at CareerLauncher.&#10;Always speak in Hinglish (Hindi + English mix).&#10;Keep replies under 100 words." style="width:100%;height:200px;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--hi);font-size:13px;resize:vertical;outline:none;font-family:inherit;line-height:1.5"></textarea>
+              <button class="btn btn-p" style="margin-top:8px;width:100%" onclick="savePersona()"><i class="fa fa-save"></i> Save AI Prompt</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-hdr"><div class="card-title">🌐 Train from website</div></div>
+          <div style="padding:16px">
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <input id="scrape-url" placeholder="https://yourwebsite.com/courses" style="flex:1;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--hi);font-size:13px;outline:none">
+              <button class="btn btn-p" onclick="addAndScrapeUrl()"><i class="fa fa-download"></i> Scrape</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-hdr"><div class="card-title">📚 Knowledge base sources</div></div>
+          <div style="padding:16px" id="kb-sources">
+            <p style="color:var(--mid);font-size:12px">Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ TEAM ═══════ -->
+      <div class="page" id="page-team">
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title">Team Members</div>
+            <button class="btn btn-p btn-sm" onclick="openAddUser()"><i class="fa fa-plus"></i> Add Member</button>
+          </div>
+          <div class="tw"><table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="team-body"><tr><td colspan="5" class="empty-state"><i class="fa fa-spinner fa-spin"></i></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══════ SETTINGS ═══════ -->
+      <div class="page" id="page-settings">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">⚙️ Company Settings</div></div>
+          <div style="display:grid;gap:14px">
+            <div class="fg">
+              <label style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px">AI Language</label>
+              <select class="sel" id="s-language" style="width:200px">
+                <option value="hinglish">Hinglish (Hindi + English)</option>
+                <option value="hindi">Hindi only</option>
+                <option value="english">English only</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label style="font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px">WhatsApp Number (from)</label>
+              <input id="s-wa-phone" placeholder="whatsapp:+14155238886" style="background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px 13px;color:var(--hi);font-size:13px;outline:none;width:300px">
+            </div>
+            <div>
+              <button class="btn btn-p" onclick="saveSettings()"><i class="fa fa-save"></i> Save Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">🌐 Knowledge Base</div></div>
+          <div style="font-size:12px;color:var(--mid);margin-bottom:14px">Add your website URLs. AI will scrape them to learn about your products/courses.</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input id="kb-url-input" placeholder="https://careerlauncher.com/cat" style="flex:1;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px 13px;color:var(--hi);font-size:13px;outline:none">
+            <button class="btn btn-p" onclick="addKBUrl()"><i class="fa fa-plus"></i> Add URL</button>
+          </div>
+          <div id="kb-urls-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+          <button class="btn btn-b" onclick="scrapeKB()" id="scrape-btn"><i class="fa fa-spider"></i> Scrape & Train AI</button>
+          <div id="scrape-status" style="font-size:11px;color:var(--mid);margin-top:8px"></div>
+        </div>
+      </div>
+
+    </div><!-- content -->
+  </div><!-- main -->
+</div><!-- shell -->
+</div><!-- app -->
+
+<!-- Add Lead Modal -->
+<div class="modal-bg" id="modal-lead">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Add Lead</h3><div class="close-x" onclick="closeModal('modal-lead')">✕</div></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="fg"><label>Name</label><input id="al-name" placeholder="Student name" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+      <div class="fg"><label>WhatsApp</label><input id="al-phone" placeholder="+91 98765 43210" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+      <div class="fg"><label>Email</label><input id="al-email" placeholder="email@domain.com" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+      <div class="fg"><label>Course Interest</label><input id="al-course" placeholder="CAT, CUET, IPM..." style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-g" onclick="closeModal('modal-lead')">Cancel</button>
+      <button class="btn btn-p" onclick="addLead()"><i class="fa fa-plus"></i> Add Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-bg" id="modal-user">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Add Team Member</h3><div class="close-x" onclick="closeModal('modal-user')">✕</div></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="fg"><label>Full Name</label><input id="au-name" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+      <div class="fg"><label>Email</label><input id="au-email" type="email" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+      <div class="fg"><label>Password</label><input id="au-pass" type="password" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"></div>
+      <div class="fg"><label>Role</label><select id="au-role" style="width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px;color:var(--hi);font-size:13px;outline:none"><option value="sales">Sales / Counsellor</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-g" onclick="closeModal('modal-user')">Cancel</button>
+      <button class="btn btn-p" onclick="addUser()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const API = '';
+let TOKEN = localStorage.getItem('lp_token') || '';
+let SLUG  = localStorage.getItem('lp_slug') || '';
+let USER  = JSON.parse(localStorage.getItem('lp_user') || '{}');
+let allLeads = [], allChatLeads = [], currentLeadId = null;
+let leadsPage = 1;
+const LEADS_PER_PAGE = 25;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function api(method, path, body=null) {
+  const headers = { Authorization: `Bearer ${TOKEN}` };
+  if (body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (!res.ok) { const e = await res.json().catch(()=>({detail:'Error'})); throw new Error(e.detail||`HTTP ${res.status}`); }
+  return res.json();
+}
+
+async function doLogin() {
+  const slug  = document.getElementById('l-slug').value.trim();
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!slug||!email||!pass) { document.getElementById('l-err').textContent='All fields required'; return; }
+  try {
+    const r = await fetch(API + '/api/v1/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: pass, company_slug: slug })
+    });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const d = await r.json();
+    TOKEN = d.access_token; SLUG = slug; USER = d.user;
+    localStorage.setItem('lp_token', TOKEN);
+    localStorage.setItem('lp_slug', SLUG);
+    localStorage.setItem('lp_user', JSON.stringify(USER));
+    bootApp();
+  } catch(e) { document.getElementById('l-err').textContent = e.message; }
+}
+
+function logout() {
+  localStorage.clear(); TOKEN=''; SLUG=''; USER={};
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Sidebar company info
+  document.getElementById('sb-company-info').innerHTML =
+    `<b>${USER.company_name || SLUG}</b><br>${USER.name || ''} (${USER.role || ''})`;
+
+  // ── FIX: removed null-ref crash on missing 'preview-company-name' element ──
+  // Widget code and webhook URL — call setWidgetMode so code display is in sync
+  setWidgetMode('both');
+  const base = window.location.origin + (window.APP_PREFIX || '');
+  document.getElementById('webhook-url').textContent = `${base}/api/v1/webhooks/${SLUG}/whatsapp`;
+
+  await Promise.all([loadDashboard(), loadChatLeads()]);
+
+  // Check AI toggle state
+  try {
+    const company = await api('GET', `/api/v1/companies/${SLUG}`);
+    const aiOn = !company.wa_demo_mode;
+    document.getElementById('ai-toggle-cb').checked = aiOn;
+    document.getElementById('ai-status-text').textContent = aiOn ? 'ON' : 'OFF';
+    document.getElementById('ai-status-text').style.color = aiOn ? 'var(--accent)' : 'var(--red)';
+  } catch(e) {}
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name)?.classList.add('active');
+  // Mark sidebar item active
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `goPage('${name}')`) n.classList.add('active');
+  });
+  document.getElementById('tb-title').textContent = {
+    dashboard:'Dashboard', leads:'All Leads', conversations:'Conversations',
+    widget:'Widget Setup', 'ai-training':'AI Training', team:'Team', settings:'Settings'
+  }[name] || name;
+
+  if (name === 'leads') loadLeads();
+  if (name === 'conversations') { loadChatLeads(); startPolling(); } else { stopPolling(); }
+  if (name === 'ai-training') loadKnowledgeBase();
+  if (name === 'team') loadTeam();
+  if (name === 'settings') loadSettings();
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function refreshPage() { bootApp(); }
+
+// ── Auto-refresh for conversations ───────────────────────────────────────────
+let _pollInterval = null;
+
+function startPolling() {
+  stopPolling();
+  _pollInterval = setInterval(async () => {
+    try {
+      await loadChatLeads();
+      if (currentLeadId) {
+        const d = await api('GET', `/api/v1/leads/${currentLeadId}/conversation`);
+        const convo = d.conversation || [];
+        const msgs = document.getElementById('chat-msgs');
+        if (msgs && convo.length) {
+          const oldCount = msgs.querySelectorAll('.msg').length;
+          if (convo.length !== oldCount) {
+            msgs.innerHTML = convo.map(t => buildMsgBubble(t)).join('');
+            setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+          }
+        }
+      }
+    } catch(e) {}
+  }, 5000);
+}
+
+function stopPolling() {
+  if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const allD = await api('GET', '/api/v1/leads/all?limit=200');
+    document.getElementById('kv-total').textContent = allD.total;
+    document.getElementById('kv-hot').textContent  = (allD.leads||[]).filter(l=>l.score>=40).length;
+    document.getElementById('kv-form').textContent = (allD.leads||[]).filter(l=>l.source==='website_form').length;
+    document.getElementById('kv-wa').textContent   = (allD.leads||[]).filter(l=>['whatsapp','whatsapp_widget'].includes(l.source)).length;
+    document.getElementById('nb-leads').textContent = allD.total;
+
+    const tbody = document.getElementById('recent-leads-body');
+    if (!allD.leads?.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fa fa-user-slash"></i><br>No leads yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = allD.leads.slice(0,8).map(l => `
+      <tr onclick="openConversation(${l.id})">
+        <td><div class="td-b">${l.contact_name||l.company||'—'}</div></td>
+        <td><code style="font-size:11px">${l.phone||'—'}</code></td>
+        <td>${sourceBadge(l.source)}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td>${scoreBadge(l.score)}</td>
+        <td style="color:var(--mid);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.last_message?.text||'—'}</td>
+        <td style="font-size:10px;color:var(--lo)">${fmtDate(l.created_at)}</td>
+      </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ── Leads ─────────────────────────────────────────────────────────────────────
+async function loadLeads(page=1) {
+  leadsPage = page;
+  const q = document.getElementById('leads-search')?.value || '';
+  const st = document.getElementById('leads-status')?.value || '';
+  const src = document.getElementById('leads-source')?.value || '';
+  let url = `/api/v1/leads/all?limit=${LEADS_PER_PAGE}&offset=${(page-1)*LEADS_PER_PAGE}`;
+  if (q) url += `&search=${encodeURIComponent(q)}`;
+  if (st) url += `&status=${st}`;
+  if (src) url += `&source=${src}`;
+
+  const tbody = document.getElementById('leads-body');
+  tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><i class="fa fa-spinner fa-spin"></i></td></tr>';
+
+  try {
+    const d = await api('GET', url);
+    allLeads = d.leads || [];
+    if (!allLeads.length) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><i class="fa fa-user-slash"></i><br>No leads found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = allLeads.map(l => `
+      <tr onclick="openConversation(${l.id})">
+        <td><div class="td-b">${l.contact_name||l.company||'—'}</div></td>
+        <td><code style="font-size:11px">${l.phone||'—'}</code></td>
+        <td style="font-size:11px;color:var(--mid)">${l.email||'—'}</td>
+        <td style="font-size:11px;color:var(--mid)">${l.pain?.replace('Course: ','').split('\n')[0]||'—'}</td>
+        <td>${sourceBadge(l.source)}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td>${scoreBadge(l.score)}</td>
+        <td style="font-size:11px;color:var(--mid)">${l.counsellor?.name||'Unassigned'}</td>
+        <td style="font-size:11px;color:var(--mid);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.last_message?.text||'—'}</td>
+        <td>
+          <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
+            <button class="btn btn-g btn-sm" onclick="openConversation(${l.id})" title="Chat"><i class="fa fa-comment"></i></button>
+            <button class="btn btn-b btn-sm" onclick="openAssign(${l.id})" title="Assign"><i class="fa fa-user-plus"></i></button>
+            <button class="btn btn-g btn-sm" onclick="changeStatus(${l.id},'${l.status}')" title="Status"><i class="fa fa-tag"></i></button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    const total = d.total, pages = Math.ceil(total/LEADS_PER_PAGE);
+    document.getElementById('leads-pagination').innerHTML = `
+      <span>${total} total leads</span>
+      <div style="display:flex;gap:6px">
+        ${page>1?`<button class="btn btn-g btn-sm" onclick="loadLeads(${page-1})">← Prev</button>`:''}
+        <span style="padding:5px 10px;background:var(--card);border:1px solid var(--border);border-radius:6px">${page}/${pages||1}</span>
+        ${page<pages?`<button class="btn btn-g btn-sm" onclick="loadLeads(${page+1})">Next →</button>`:''}
+      </div>`;
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+// ── Conversations ─────────────────────────────────────────────────────────────
+async function loadChatLeads() {
+  try {
+    const d = await api('GET', '/api/v1/leads/all?limit=100');
+    allChatLeads = d.leads || [];
+    renderChatList(allChatLeads);
+  } catch(e) {}
+}
+
+function renderChatList(leads) {
+  const el = document.getElementById('chat-list-items');
+  if (!leads.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:24px"><i class="fa fa-comments"></i><br>No conversations</div>';
+    return;
+  }
+  el.innerHTML = leads.map(l => `
+    <div class="chat-item ${currentLeadId===l.id?'active':''}" onclick="openConversation(${l.id})" id="ci-${l.id}">
+      <div class="ci-name">
+        <span>${l.contact_name||l.phone||'Unknown'} ${l.score>=50?'🔥':l.score>=30?'🟡':''}</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          <span class="ci-source ${['whatsapp','whatsapp_widget'].includes(l.source)?'wa':'form'}">${['whatsapp','whatsapp_widget'].includes(l.source)?'WA':'Form'}</span>
+          <span class="ci-time">${fmtDateShort(l.created_at)}</span>
+        </div>
+      </div>
+      <div class="ci-preview">${l.last_message?.text||'No messages yet'}</div>
+    </div>`).join('');
+}
+
+function filterChats() {
+  const q = document.getElementById('chat-search').value.toLowerCase();
+  const filtered = q ? allChatLeads.filter(l =>
+    (l.contact_name||'').toLowerCase().includes(q) || (l.phone||'').includes(q)
+  ) : allChatLeads;
+  renderChatList(filtered);
+}
+
+async function openConversation(leadId) {
+  currentLeadId = leadId;
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`ci-${leadId}`)?.classList.add('active');
+
+  if (!document.getElementById('page-conversations').classList.contains('active')) {
+    goPage('conversations');
+  }
+
+  const chatMain = document.getElementById('chat-main');
+  chatMain.innerHTML = '<div class="chat-empty"><i class="fa fa-spinner fa-spin" style="font-size:24px"></i></div>';
+
+  try {
+    const d = await api('GET', `/api/v1/leads/${leadId}/conversation`);
+    const lead = d.lead;
+    const convo = d.conversation || [];
+
+    let teamOptions = '<option value="">Unassigned</option>';
+    try {
+      const team = await api('GET', '/api/v1/users');
+      teamOptions += (team.users||[]).map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+    } catch(e) {}
+
+    chatMain.innerHTML = `
+      <div class="chat-header">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px">${lead.contact_name||lead.phone||'Unknown'} ${scoreBadge(lead.score)}</div>
+          <div style="font-size:11px;color:var(--mid)">${lead.phone||''} · ${lead.source||''} · ${statusBadge(lead.status)}</div>
+        </div>
+        <select class="sel" onchange="assignLead(${lead.id},this.value)" style="font-size:11px">${teamOptions}</select>
+        <select class="sel" onchange="updateStatus(${lead.id},this.value)" style="font-size:11px">
+          ${['new','contacted','replied','demo','closed','lost'].map(s=>`<option ${s===lead.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="chat-messages" id="chat-msgs">
+        ${convo.length ? convo.map(t => buildMsgBubble(t)).join('') :
+          '<div class="empty-state"><i class="fa fa-comment-slash"></i><br>No messages yet</div>'}
+      </div>
+      <div class="chat-input">
+        <textarea id="reply-box" placeholder="Type your reply... (Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply(${lead.id})}"></textarea>
+        <button class="btn btn-p" onclick="sendReply(${lead.id})"><i class="fa fa-paper-plane"></i></button>
+      </div>`;
+
+    setTimeout(() => {
+      const msgs = document.getElementById('chat-msgs');
+      if (msgs) msgs.scrollTop = msgs.scrollHeight;
+    }, 50);
+  } catch(e) {
+    chatMain.innerHTML = `<div class="chat-empty" style="color:var(--red)">${e.message}</div>`;
+  }
+  startPolling();
+}
+
+function buildMsgBubble(turn) {
+  const isIn = turn.direction === 'inbound' || turn.direction === 'note';
+  const isAI = turn.speaker === 'ai';
+  const cls = isIn ? 'in' : isAI ? 'out ai' : 'out';
+  const label = { student:'Student', ai:'AI Reply', agent:'You', form:'Form', system:'System' }[turn.speaker] || turn.speaker;
+  const icon = { student:'👤', ai:'🤖', agent:'💬', form:'📋', system:'⚙️' }[turn.speaker] || '';
+  return `
+    <div style="display:flex;flex-direction:column;align-items:${isIn?'flex-start':'flex-end'}">
+      <div class="msg ${cls}">
+        ${turn.text.replace(/\n/g,'<br>')}
+        <div class="msg-meta">${icon} ${label} · ${fmtTime(turn.created_at)}</div>
+      </div>
+    </div>`;
+}
+
+async function sendReply(leadId) {
+  const box = document.getElementById('reply-box');
+  const msg = box?.value?.trim();
+  if (!msg) return;
+  box.value = '';
+  try {
+    await api('POST', `/api/v1/leads/${leadId}/reply`, { message: msg });
+    showToast('✅ Reply sent!');
+    openConversation(leadId);
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+async function updateStatus(leadId, status) {
+  try {
+    await api('PATCH', `/api/v1/leads/${leadId}/status`, { status });
+    showToast(`Status → ${status}`);
+    loadChatLeads();
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+async function assignLead(leadId, userId) {
+  if (!userId) return;
+  try {
+    await api('PATCH', `/api/v1/leads/${leadId}/assign`, { user_id: parseInt(userId) });
+    showToast('✅ Assigned!');
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+// ── AI Toggle ─────────────────────────────────────────────────────────────────
+async function toggleAI(enabled) {
+  try {
+    await api('PATCH', `/api/v1/companies/${SLUG}/ai-toggle?enabled=${enabled}`);
+    document.getElementById('ai-status-text').textContent = enabled ? 'ON' : 'OFF';
+    document.getElementById('ai-status-text').style.color = enabled ? 'var(--accent)' : 'var(--red)';
+    showToast(`AI auto-reply ${enabled?'enabled':'disabled'}`);
+  } catch(e) {
+    document.getElementById('ai-toggle-cb').checked = !enabled;
+    showToast(e.message,'err');
+  }
+}
+
+// ── Team ──────────────────────────────────────────────────────────────────────
+async function loadTeam() {
+  try {
+    const d = await api('GET', '/api/v1/users');
+    const tbody = document.getElementById('team-body');
+    if (!d.users?.length) { tbody.innerHTML='<tr><td colspan="5" class="empty-state"><i class="fa fa-user-slash"></i><br>No team members</td></tr>'; return; }
+    tbody.innerHTML = d.users.map(u => `<tr>
+      <td class="td-b">${u.name}</td>
+      <td style="font-size:11px;color:var(--mid)">${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'p':u.role==='manager'?'b':'g'}">${u.role}</span></td>
+      <td><span class="badge ${u.is_active?'g':'r'}">${u.is_active?'Active':'Inactive'}</span></td>
+      <td><button class="btn btn-r btn-sm" onclick="deactivateUser(${u.id})"><i class="fa fa-ban"></i></button></td>
+    </tr>`).join('');
+  } catch(e) {}
+}
+
+function openAddUser() { openModal('modal-user'); }
+async function addUser() {
+  const name=document.getElementById('au-name').value, email=document.getElementById('au-email').value,
+        pass=document.getElementById('au-pass').value, role=document.getElementById('au-role').value;
+  if (!name||!email||!pass) { showToast('Fill all fields','err'); return; }
+  try {
+    await api('POST','/api/v1/users',{email,name,role,password:pass});
+    showToast('✅ Member added!'); closeModal('modal-user'); loadTeam();
+  } catch(e) { showToast(e.message,'err'); }
+}
+async function deactivateUser(id) {
+  if (!confirm('Deactivate this user?')) return;
+  try { await api('DELETE',`/api/v1/users/${id}`); loadTeam(); showToast('Deactivated'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+// ── Add Lead ──────────────────────────────────────────────────────────────────
+function openAddLead() { openModal('modal-lead'); }
+async function addLead() {
+  const name=document.getElementById('al-name').value, phone=document.getElementById('al-phone').value;
+  if (!name||!phone) { showToast('Name and phone required','err'); return; }
+  try {
+    await api('POST','/api/v1/leads',{company:name,contact_name:name,phone,email:document.getElementById('al-email').value,pain:`Course: ${document.getElementById('al-course').value}`});
+    showToast('✅ Lead added!'); closeModal('modal-lead'); loadLeads(); loadDashboard();
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const d = await api('GET', `/api/v1/companies/${SLUG}`);
+    document.getElementById('s-wa-phone').value = d.wa_phone_from || '';
+    document.getElementById('s-language').value = d.ai_language || 'hinglish';
+    const kb = d.kb_urls || [];
+    renderKBUrls(kb);
+  } catch(e) {}
+}
+
+function renderKBUrls(urls) {
+  document.getElementById('kb-urls-list').innerHTML = urls.map(url => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--card2);border-radius:7px;padding:8px 12px;border:1px solid var(--border)">
+      <i class="fa fa-globe" style="color:var(--mid);font-size:11px"></i>
+      <span style="flex:1;font-size:12px;color:var(--mid)">${url}</span>
+      <button class="btn btn-r btn-sm" onclick="removeKBUrl('${url}')"><i class="fa fa-times"></i></button>
+    </div>`).join('') || '<div style="color:var(--mid);font-size:12px">No URLs added yet</div>';
+}
+
+let kbUrls = [];
+async function addKBUrl() {
+  const url = document.getElementById('kb-url-input').value.trim();
+  if (!url||!url.startsWith('http')) { showToast('Enter a valid URL','err'); return; }
+  try {
+    const d = await api('POST',`/api/v1/companies/${SLUG}/add-urls`,[url]);
+    kbUrls = d.urls; renderKBUrls(kbUrls);
+    document.getElementById('kb-url-input').value='';
+    showToast('✅ URL added!');
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+async function removeKBUrl(url) {
+  kbUrls = kbUrls.filter(u=>u!==url);
+  renderKBUrls(kbUrls);
+}
+
+async function scrapeKB() {
+  const btn = document.getElementById('scrape-btn');
+  btn.innerHTML='<span class="spinner"></span> Scraping...'; btn.disabled=true;
+  document.getElementById('scrape-status').textContent='Scraping website... this may take 1-2 minutes';
+  try {
+    const d = await api('POST',`/api/v1/companies/${SLUG}/scrape`);
+    document.getElementById('scrape-status').textContent=`✅ Done! ${d.total_chunks} knowledge chunks from ${d.scraped} pages.`;
+    showToast('✅ AI trained successfully!');
+  } catch(e) {
+    document.getElementById('scrape-status').textContent=`Error: ${e.message}`;
+    showToast(e.message,'err');
+  }
+  btn.innerHTML='<i class="fa fa-spider"></i> Scrape & Train AI'; btn.disabled=false;
+}
+
+async function saveSettings() {
+  const phone=document.getElementById('s-wa-phone').value;
+  const lang=document.getElementById('s-language').value;
+  try {
+    await api('PATCH',`/api/v1/companies/${SLUG}`,{wa_phone_from:phone,ai_language:lang});
+    showToast('✅ Settings saved!');
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+// ── Widget Mode Selector ─────────────────────────────────────────────────────
+// ── FIX: this now correctly generates mode-specific URLs and updates preview ──
+let _widgetMode = 'both';
+
+function setWidgetMode(mode) {
+  _widgetMode = mode;
+
+  // Update selector card borders
+  ['both','whatsapp','form'].forEach(function(m) {
+    const el = document.getElementById('wo-' + m);
+    if (!el) return;
+    el.classList.toggle('active', m === mode);
+  });
+
+  // SVGs for preview
+  const WA_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.528 5.845L0 24l6.335-1.504C8.036 23.45 9.978 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.846 0-3.574-.492-5.065-1.349l-.361-.214-3.762.893.952-3.665-.235-.374A9.95 9.95 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>`;
+  const FORM_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`;
+
+  const previews = {
+    both: `<div class="float-btn-row"><div class="float-lbl">Send enquiry</div><div class="form-fab">${FORM_SVG}</div></div><div class="float-btn-row"><div class="float-lbl">Chat on WhatsApp</div><div class="wa-fab">${WA_SVG}</div></div>`,
+    whatsapp: `<div class="float-btn-row"><div class="float-lbl">Chat on WhatsApp</div><div class="wa-fab">${WA_SVG}</div></div>`,
+    form: `<div class="float-btn-row"><div class="float-lbl">Send enquiry</div><div class="form-fab">${FORM_SVG}</div></div>`
+  };
+  const preview = document.getElementById('widget-float-preview');
+  if (preview) preview.innerHTML = previews[mode] || previews.both;
+
+  // ── FIX: generate correct URL with ?mode= parameter ──────────────────────
+  const base = window.location.origin + (window.APP_PREFIX || '');
+  const modeParam = mode === 'both' ? '' : `?mode=${mode}`;
+  const scriptUrl = `${base}/api/v1/capture/${SLUG}/widget.js${modeParam}`;
+
+  const codeEl = document.getElementById('widget-code-content');
+  if (codeEl) {
+    codeEl.innerHTML =
+      `<span class="tag">&lt;script</span>\n` +
+      `  <span class="attr">src</span>=<span class="val">"${scriptUrl}"</span>\n` +
+      `<span class="tag">&gt;&lt;/script&gt;</span>`;
+  }
+
+  // Info text
+  const infos = {
+    both: '✅ Shows both a WhatsApp chat button AND an enquiry form. Best for maximum lead capture from two channels.',
+    whatsapp: '✅ Shows only the WhatsApp button. Visitors tap to open WhatsApp directly — simple and fast.',
+    form: '✅ Shows only the enquiry form popup. Collects name, phone, email and course interest. Leads saved to CRM instantly.'
+  };
+  const infoEl = document.getElementById('widget-mode-info');
+  if (infoEl) infoEl.textContent = infos[mode] || infos.both;
+}
+
+// ── Widget Code Copy ──────────────────────────────────────────────────────────
+function copyWidgetCode() {
+  const base = window.location.origin + (window.APP_PREFIX || '');
+  const modeParam = _widgetMode !== 'both' ? `?mode=${_widgetMode}` : '';
+  const code = `<script src="${base}/api/v1/capture/${SLUG}/widget.js${modeParam}"><\/script>`;
+  navigator.clipboard.writeText(code).then(() => showToast('📋 Widget code copied!'));
+}
+function copyWebhookUrl() {
+  const url = document.getElementById('webhook-url').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('📋 Webhook URL copied!'));
+}
+
+// ── AI Training ──────────────────────────────────────────────────────────────
+async function loadKnowledgeBase() {
+  try {
+    const d = await api('GET', `/api/v1/companies/${SLUG}/knowledge`);
+    if (d.ai_persona) {
+      document.getElementById('ai-persona').value = d.ai_persona;
+    }
+    try {
+      const cinfo = await api('GET', `/api/v1/companies/${SLUG}`);
+      updateLangUI(cinfo.ai_language || 'hinglish');
+    } catch(e) {}
+    const el = document.getElementById('kb-sources');
+    if (!d.sources || d.sources.length === 0) {
+      el.innerHTML = '<p style="color:var(--mid);font-size:13px;padding:8px 0">No knowledge sources yet. Add text or scrape a URL above.</p>';
+      return;
+    }
+    el.innerHTML = `
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <tr style="text-align:left;color:var(--mid);border-bottom:1px solid var(--border)">
+          <th style="padding:8px 6px">Source</th><th style="padding:8px 6px">Title</th>
+          <th style="padding:8px 6px">Chunks</th><th style="padding:8px 6px">Updated</th><th style="padding:8px 6px"></th>
+        </tr>
+        ${d.sources.map(s => `
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px 6px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              ${s.is_custom ? '<span class="badge g">Custom</span>' : '<span class="badge b">Web</span>'}
+              <span style="margin-left:4px">${s.url.length>40?s.url.substring(0,40)+'...':s.url}</span>
+            </td>
+            <td style="padding:8px 6px;color:var(--hi)">${s.title||'—'}</td>
+            <td style="padding:8px 6px">${s.chunks}</td>
+            <td style="padding:8px 6px">${fmtDate(s.last_updated)}</td>
+            <td style="padding:8px 6px">
+              <button class="btn btn-g btn-sm" onclick="deleteKBSource('${encodeURIComponent(s.url)}')" title="Delete"><i class="fa fa-trash"></i></button>
+            </td>
+          </tr>`).join('')}
+      </table>
+      <p style="margin-top:8px;font-size:11px;color:var(--mid)">Total: ${d.total_chunks} chunks across ${d.sources.length} sources</p>`;
+  } catch(e) {
+    document.getElementById('kb-sources').innerHTML = `<p style="color:var(--red);font-size:12px">${e.message}</p>`;
+  }
+}
+
+async function trainWithText() {
+  const title = document.getElementById('train-title').value.trim() || 'Custom Training';
+  const content = document.getElementById('train-content').value.trim();
+  if (!content) { showToast('Please enter some content','err'); return; }
+  try {
+    const d = await api('POST',`/api/v1/companies/${SLUG}/train/text`,{title,content});
+    showToast(`✅ Added ${d.chunks_stored} chunks to KB!`);
+    document.getElementById('train-title').value='';
+    document.getElementById('train-content').value='';
+    loadKnowledgeBase();
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+async function savePersona() {
+  const prompt = document.getElementById('ai-persona').value.trim();
+  try {
+    await api('POST',`/api/v1/companies/${SLUG}/train/prompt`,{system_prompt:prompt});
+    showToast('✅ AI prompt saved!');
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+async function addAndScrapeUrl() {
+  const url = document.getElementById('scrape-url').value.trim();
+  if (!url) { showToast('Enter a URL','err'); return; }
+  showToast('Scraping... this may take a moment');
+  try {
+    await api('POST',`/api/v1/companies/${SLUG}/add-urls`,[url]);
+    const d = await api('POST',`/api/v1/companies/${SLUG}/scrape`);
+    showToast(`✅ Scraped ${d.total_chunks} chunks!`);
+    document.getElementById('scrape-url').value='';
+    loadKnowledgeBase();
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+async function deleteKBSource(encodedUrl) {
+  const url = decodeURIComponent(encodedUrl);
+  if (!confirm(`Delete all knowledge from:\n${url}?`)) return;
+  try {
+    await api('DELETE',`/api/v1/companies/${SLUG}/knowledge/${encodeURIComponent(url)}`);
+    showToast('✅ Deleted!');
+    loadKnowledgeBase();
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+// ── Language Toggle ───────────────────────────────────────────────────────────
+function updateLangUI(lang) {
+  const isHinglish = lang === 'hinglish';
+  document.getElementById('lang-card-hinglish').style.borderColor = isHinglish ? 'rgba(99,102,241,0.6)' : 'var(--border)';
+  document.getElementById('lang-card-english').style.borderColor  = !isHinglish ? 'rgba(99,102,241,0.6)' : 'var(--border)';
+  document.getElementById('lang-check-hinglish').style.display = isHinglish ? 'flex' : 'none';
+  document.getElementById('lang-check-english').style.display  = !isHinglish ? 'flex' : 'none';
+  document.getElementById('lang-badge-text').textContent = isHinglish ? '🇮🇳 Hinglish Active' : '🇬🇧 English Active';
+}
+
+async function switchLanguage(lang) {
+  const status = document.getElementById('lang-status');
+  status.style.color = 'var(--mid)';
+  status.textContent = 'Switching language...';
+  try {
+    const d = await api('POST',`/api/v1/companies/${SLUG}/language?language=${lang}`);
+    if (d.ok) {
+      updateLangUI(lang);
+      status.style.color = '#22c55e';
+      status.textContent = `✅ Language switched to ${lang.toUpperCase()} successfully!`;
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    } else {
+      status.style.color = '#ef4444';
+      status.textContent = '❌ ' + (d.detail || 'Switch failed');
+    }
+  } catch(e) {
+    status.style.color = '#ef4444';
+    status.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function scoreBadge(score) {
+  const s = parseInt(score) || 0;
+  if (s >= 50) return `<span class="badge" style="background:rgba(239,68,68,.12);color:#ef4444;font-weight:700">🔥 ${s}</span>`;
+  if (s >= 30) return `<span class="badge" style="background:rgba(245,158,11,.12);color:#f59e0b;font-weight:700">🟡 ${s}</span>`;
+  return `<span class="badge" style="background:rgba(107,114,128,.1);color:#6b7280">${s}</span>`;
+}
+function sourceBadge(src) {
+  const map = { website_form:'b', whatsapp:'g', whatsapp_widget:'g', manual:'p' };
+  const lbl = { website_form:'Form', whatsapp:'WhatsApp', whatsapp_widget:'WA Widget', manual:'Manual' };
+  return `<span class="badge ${map[src]||'p'}">${lbl[src]||src}</span>`;
+}
+function statusBadge(s) {
+  const map = { new:'b', contacted:'y', replied:'p', demo:'p', closed:'g', lost:'r' };
+  return `<span class="badge ${map[s]||'b'}">${s||'new'}</span>`;
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
+}
+function fmtDateShort(iso) {
+  if (!iso) return '';
+  const d=new Date(iso); const now=new Date();
+  if (d.toDateString()===now.toDateString()) return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Auto-boot if token exists ─────────────────────────────────────────────────
+if (TOKEN && SLUG) {
+  bootApp();
+} else {
+  document.getElementById('login-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>

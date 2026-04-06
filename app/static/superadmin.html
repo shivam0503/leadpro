@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>LeadPro — Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root{--bg:#07090f;--card:#0e1118;--card2:#131720;--hover:#161b27;--border:#1c2235;--borderlt:#232b42;--accent:#f97316;--accent2:#ea6c0a;--accentg:rgba(249,115,22,.12);--hi:#f1f5f9;--mid:#8899b0;--lo:#374357;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--yellow:#eab308;--purple:#a855f7;--teal:#14b8a6;--font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);background:var(--bg);color:var(--hi);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--borderlt);border-radius:4px}
+button,input,select,textarea{font-family:var(--font-body)}
+
+/* ── Login ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--card);border:1px solid var(--borderlt);border-radius:20px;padding:40px;width:380px;max-width:94vw}
+.login-logo{font-family:var(--font-head);font-size:22px;font-weight:800;margin-bottom:6px}
+.login-logo span{color:var(--accent)}
+.login-sub{font-size:11px;color:var(--mid);margin-bottom:28px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:6px 12px;display:inline-block}
+.fg{margin-bottom:14px}
+.fg label{font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px}
+.fg input{width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:11px 14px;color:var(--hi);font-size:13px;outline:none;transition:.2s}
+.fg input:focus{border-color:var(--accent)}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;transition:.2s}
+.login-btn:hover{background:var(--accent2)}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center}
+
+/* ── Layout ── */
+#app{display:none;min-height:100vh}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:var(--card);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sb-logo{padding:18px 20px;border-bottom:1px solid var(--border)}
+.sb-logo-text{font-family:var(--font-head);font-size:16px;font-weight:800}
+.sb-logo-text span{color:var(--accent)}
+.sb-badge{font-size:9px;font-weight:700;background:rgba(249,115,22,.15);color:var(--accent);border:1px solid rgba(249,115,22,.3);border-radius:4px;padding:2px 7px;margin-top:4px;display:inline-block}
+.nav-section{padding:8px 0}
+.nav-lbl{font-size:9px;font-weight:700;color:var(--lo);text-transform:uppercase;letter-spacing:1.4px;padding:7px 18px 3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:12.5px;color:var(--mid);cursor:pointer;transition:.15s;position:relative}
+.nav-item:hover{color:var(--hi);background:var(--hover)}
+.nav-item.active{color:var(--accent);background:rgba(249,115,22,.07)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-item i{width:16px;text-align:center;font-size:12px}
+.nbadge{margin-left:auto;background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px}
+.main{overflow-y:auto}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.tb-title{font-family:var(--font-head);font-size:14px;font-weight:700;flex:1}
+.tb-user{font-size:11px;color:var(--mid);display:flex;align-items:center;gap:6px}
+.content{padding:22px}
+.page{display:none}.page.active{display:block}
+
+/* ── KPI Cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+.kpi:hover{border-color:var(--borderlt)}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:50%;transform:translate(20px,-20px)}
+.kpi.o::before{background:radial-gradient(circle,rgba(249,115,22,.2),transparent)}
+.kpi.g::before{background:radial-gradient(circle,rgba(37,211,102,.18),transparent)}
+.kpi.b::before{background:radial-gradient(circle,rgba(59,130,246,.18),transparent)}
+.kpi.p::before{background:radial-gradient(circle,rgba(168,85,247,.18),transparent)}
+.kpi.t::before{background:radial-gradient(circle,rgba(20,184,166,.18),transparent)}
+.kpi-icon{font-size:18px;margin-bottom:10px}
+.kpi-val{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1}
+.kpi-lbl{font-size:10px;color:var(--mid);margin-top:4px}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;margin-bottom:16px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap}
+.card-title{font-family:var(--font-head);font-size:14px;font-weight:700}
+
+/* ── Buttons ── */
+.btn{border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-g{background:transparent;border:1px solid var(--borderlt);color:var(--mid)}.btn-g:hover{color:var(--hi);border-color:var(--mid)}
+.btn-b{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue)}
+.btn-r{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.btn-gr{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* ── Table ── */
+.tw{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 12px;text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--lo);background:var(--card2);border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:.12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--hover)}
+td{padding:11px 12px;font-size:12px;vertical-align:middle}
+.td-b{font-weight:600}.td-s{font-size:10px;color:var(--mid);margin-top:2px}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:9.5px;font-weight:700;text-transform:uppercase}
+.badge::before{content:'';width:4px;height:4px;border-radius:50%}
+.badge.g{background:rgba(34,197,94,.1);color:var(--green)}.badge.g::before{background:var(--green)}
+.badge.r{background:rgba(239,68,68,.1);color:var(--red)}.badge.r::before{background:var(--red)}
+.badge.y{background:rgba(234,179,8,.1);color:var(--yellow)}.badge.y::before{background:var(--yellow)}
+.badge.b{background:rgba(59,130,246,.1);color:var(--blue)}.badge.b::before{background:var(--blue)}
+.badge.o{background:rgba(249,115,22,.1);color:var(--accent)}.badge.o::before{background:var(--accent)}
+.badge.p{background:rgba(168,85,247,.1);color:var(--purple)}.badge.p::before{background:var(--purple)}
+.badge.t{background:rgba(20,184,166,.1);color:var(--teal)}.badge.t::before{background:var(--teal)}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--borderlt);border-radius:14px;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-hdr h3{font-family:var(--font-head);font-size:15px;font-weight:700}
+.modal-body{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:13px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.close-x{background:var(--card2);border:1px solid var(--border);color:var(--mid);width:28px;height:28px;border-radius:50%;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mf label{font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:5px}
+.mf input,.mf select,.mf textarea{width:100%;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px 13px;color:var(--hi);font-size:13px;outline:none;transition:.2s}
+.mf input:focus,.mf select:focus{border-color:var(--accent)}
+.mf textarea{resize:vertical;min-height:80px}
+
+/* ── Company Detail Panel ── */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail-item{background:var(--card2);border-radius:8px;padding:12px;border:1px solid var(--border)}
+.detail-lbl{font-size:9px;font-weight:700;color:var(--lo);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.detail-val{font-size:13px;color:var(--hi);font-weight:500}
+
+/* ── Progress bar ── */
+.pbar-wrap{background:var(--card2);border-radius:99px;height:6px;overflow:hidden;margin-top:6px}
+.pbar{height:100%;border-radius:99px;background:var(--accent);transition:.5s}
+.pbar.warn{background:var(--yellow)}
+.pbar.danger{background:var(--red)}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--borderlt);border-radius:10px;padding:12px 18px;font-size:13px;transform:translateY(80px);transition:.3s;z-index:9999;max-width:320px}
+#toast.show{transform:translateY(0)}
+#toast.ok{border-color:var(--green);color:var(--green)}
+#toast.err{border-color:var(--red);color:var(--red)}
+#toast.info{border-color:var(--accent);color:var(--accent)}
+
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:48px 20px;color:var(--mid);font-size:13px}
+.empty-state i{font-size:36px;margin-bottom:12px;display:block;opacity:.3}
+.sel{background:var(--card);border:1px solid var(--borderlt);color:var(--mid);border-radius:8px;padding:7px 10px;font-size:11px;outline:none;cursor:pointer}
+.code-box{background:#0d0f16;border-radius:10px;padding:14px 16px;font-family:monospace;font-size:11px;color:#e2e8f0;border:1px solid var(--border);word-break:break-all;position:relative}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;border:none;border-radius:5px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Lead<span>Pro</span></div>
+    <div class="login-sub">🔐 Super Admin Panel</div>
+    <div class="fg"><label>Email</label><input id="l-email" type="email" placeholder="superadmin@leadpro.ai" value="superadmin@leadpro.ai"/></div>
+    <div class="fg"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••" value="LeadPro@2024!"/></div>
+    <button class="login-btn" onclick="doLogin()">Sign In as Super Admin →</button>
+    <div id="l-err" class="login-err"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+<div class="shell">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sb-logo" style="padding:18px 20px;border-bottom:1px solid var(--border)">
+      <div class="sb-logo-text">Lead<span>Pro</span></div>
+      <div class="sb-badge">⚡ Super Admin</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-lbl">Overview</div>
+      <div class="nav-item active" onclick="goPage('overview')"><i class="fa fa-gauge"></i> Overview</div>
+      <div class="nav-item" onclick="goPage('companies')"><i class="fa fa-building"></i> Companies <span class="nbadge" id="nb-companies">0</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-lbl">Management</div>
+      <div class="nav-item" onclick="goPage('create-company')"><i class="fa fa-plus-circle"></i> Add Company</div>
+      <div class="nav-item" onclick="goPage('settings')"><i class="fa fa-gear"></i> Global Settings</div>
+    </div>
+    <div style="margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--mid);margin-bottom:8px" id="sb-admin-email">—</div>
+      <button class="btn btn-g btn-sm" style="width:100%" onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="tb-title">Overview</div>
+      <div class="tb-user"><i class="fa fa-circle" style="color:var(--green);font-size:8px"></i> <span id="tb-email">—</span></div>
+      <button class="btn btn-g btn-sm" onclick="refreshAll()"><i class="fa fa-rotate"></i> Refresh</button>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ OVERVIEW ══ -->
+      <div class="page active" id="page-overview">
+        <div class="kpi-row">
+          <div class="kpi o" onclick="goPage('companies')"><div class="kpi-icon">🏢</div><div class="kpi-val" id="ov-companies">—</div><div class="kpi-lbl">Total Companies</div></div>
+          <div class="kpi g"><div class="kpi-icon">✅</div><div class="kpi-val" id="ov-active">—</div><div class="kpi-lbl">Active Companies</div></div>
+          <div class="kpi b"><div class="kpi-icon">👥</div><div class="kpi-val" id="ov-leads">—</div><div class="kpi-lbl">Total Leads (All)</div></div>
+          <div class="kpi p"><div class="kpi-icon">🧠</div><div class="kpi-val" id="ov-kb">—</div><div class="kpi-lbl">KB Chunks (All)</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title">All Companies</div>
+            <button class="btn btn-p btn-sm" onclick="goPage('create-company')"><i class="fa fa-plus"></i> Add Company</button>
+          </div>
+          <div class="tw"><table>
+            <thead><tr><th>Company</th><th>Slug</th><th>Industry</th><th>Plan</th><th>Leads</th><th>Users</th><th>AI</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ov-companies-body"><tr><td colspan="9" class="empty-state"><i class="fa fa-spinner fa-spin"></i></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ══ COMPANIES ══ -->
+      <div class="page" id="page-companies">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <input id="co-search" placeholder="Search companies..." style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--hi);font-size:12px;outline:none;width:220px" oninput="renderCompanies()">
+          <select class="sel" id="co-filter-plan" onchange="renderCompanies()">
+            <option value="">All Plans</option>
+            <option>trial</option><option>starter</option><option>growth</option><option>enterprise</option>
+          </select>
+          <select class="sel" id="co-filter-status" onchange="renderCompanies()">
+            <option value="">All Status</option>
+            <option value="1">Active</option><option value="0">Inactive</option>
+          </select>
+          <div style="margin-left:auto">
+            <button class="btn btn-p btn-sm" onclick="goPage('create-company')"><i class="fa fa-plus"></i> Add Company</button>
+          </div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Company</th><th>Domain</th><th>Plan</th><th>Leads</th><th>KB</th><th>AI Auto-Reply</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="companies-body"><tr><td colspan="9" class="empty-state"><i class="fa fa-spinner fa-spin"></i></td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- ══ CREATE COMPANY ══ -->
+      <div class="page" id="page-create-company">
+        <div class="card" style="max-width:600px">
+          <div class="card-hdr"><div class="card-title">🏢 Create New Company</div></div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="mf"><label>Company Name *</label><input id="cc-name" placeholder="CareerLauncher" oninput="autoSlug()"/></div>
+            <div class="mf"><label>Slug * (URL-safe ID)</label>
+              <div style="display:flex;gap:8px">
+                <input id="cc-slug" placeholder="careerlauncher" style="flex:1;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;padding:10px 13px;color:var(--hi);font-size:13px;outline:none"/>
+                <div style="padding:10px 13px;background:var(--card2);border:1px solid var(--borderlt);border-radius:8px;font-size:11px;color:var(--mid);white-space:nowrap">/api/v1/capture/<b id="slug-preview" style="color:var(--accent)">...</b>/form</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="mf"><label>Domain</label><input id="cc-domain" placeholder="careerlauncher.com"/></div>
+              <div class="mf"><label>Industry</label><input id="cc-industry" placeholder="edtech, realestate, finance..."/></div>
+            </div>
+            <div class="mf"><label>Description</label><textarea id="cc-desc" placeholder="Brief description of the company and what they do..."></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div class="mf"><label>Plan</label><select id="cc-plan"><option value="trial">Trial</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></div>
+              <div class="mf"><label>Max Users</label><input id="cc-users" type="number" value="5"/></div>
+              <div class="mf"><label>Max Leads</label><input id="cc-leads" type="number" value="500"/></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="mf"><label>AI Language</label><select id="cc-lang"><option value="hinglish">Hinglish</option><option value="hindi">Hindi</option><option value="english">English</option></select></div>
+              <div class="mf"><label>WhatsApp Demo Mode</label><select id="cc-wa-demo"><option value="true">Demo (no real messages)</option><option value="false">Live (sends real messages)</option></select></div>
+            </div>
+
+            <div style="background:var(--card2);border-radius:10px;padding:16px;border:1px solid var(--border)">
+              <div style="font-size:12px;font-weight:700;margin-bottom:12px;color:var(--hi)">First Admin User</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div class="mf"><label>Admin Name</label><input id="cc-admin-name" placeholder="John Admin"/></div>
+                <div class="mf"><label>Admin Email</label><input id="cc-admin-email" placeholder="admin@company.com"/></div>
+                <div class="mf"><label>Admin Password</label><input id="cc-admin-pass" type="password" placeholder="Min 8 chars"/></div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-p" onclick="createCompany()" id="cc-btn"><i class="fa fa-building"></i> Create Company</button>
+              <button class="btn btn-g" onclick="goPage('companies')">Cancel</button>
+            </div>
+            <div id="cc-result" style="display:none;background:var(--card2);border-radius:10px;padding:16px;border:1px solid var(--green)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS ══ -->
+      <div class="page" id="page-settings">
+        <div class="card" style="max-width:560px">
+          <div class="card-hdr"><div class="card-title">⚙️ Global Settings</div></div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="mf"><label>Default OpenAI Model</label><select id="gs-model"><option>gpt-4o</option><option>gpt-4.1</option><option>gpt-4o-mini</option><option>gpt-3.5-turbo</option></select></div>
+            <div class="mf"><label>Default AI Language</label><select id="gs-lang"><option value="hinglish">Hinglish</option><option value="hindi">Hindi</option><option value="english">English</option></select></div>
+            <div class="mf"><label>Default WhatsApp Provider</label><select id="gs-wa-prov"><option value="twilio">Twilio</option><option value="meta">Meta Cloud API</option></select></div>
+            <div style="background:var(--card2);border-radius:8px;padding:14px;border:1px solid var(--border);font-size:12px;color:var(--mid)">
+              <b style="color:var(--hi)">Note:</b> Global settings are configured via <code style="color:var(--accent)">.env</code> file. Per-company overrides are set in each company's config.
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:560px">
+          <div class="card-hdr"><div class="card-title">🔐 Super Admin Info</div></div>
+          <div id="sa-info" style="font-size:13px;color:var(--mid)">Loading...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Company Detail Modal -->
+<div class="modal-bg" id="modal-company">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-hdr">
+      <h3 id="modal-co-title">Company Details</h3>
+      <div class="close-x" onclick="closeModal('modal-company')">✕</div>
+    </div>
+    <div class="modal-body" id="modal-co-body">Loading...</div>
+    <div class="modal-foot">
+      <button class="btn btn-g" onclick="closeModal('modal-company')">Close</button>
+      <button class="btn btn-b" id="modal-co-edit-btn"><i class="fa fa-pen"></i> Edit Config</button>
+      <button class="btn btn-r" id="modal-co-deact-btn"><i class="fa fa-ban"></i> Deactivate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Company Modal -->
+<div class="modal-bg" id="modal-edit">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-hdr"><h3>Edit Company</h3><div class="close-x" onclick="closeModal('modal-edit')">✕</div></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-slug"/>
+      <div class="mf"><label>Company Name</label><input id="edit-name"/></div>
+      <div class="mf"><label>Domain</label><input id="edit-domain"/></div>
+      <div class="mf"><label>Plan</label><select id="edit-plan"><option value="trial">Trial</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="mf"><label>Max Users</label><input id="edit-max-users" type="number"/></div>
+        <div class="mf"><label>Max Leads</label><input id="edit-max-leads" type="number"/></div>
+      </div>
+      <div class="mf"><label>AI Language</label><select id="edit-lang"><option value="hinglish">Hinglish</option><option value="hindi">Hindi</option><option value="english">English</option></select></div>
+      <div class="mf"><label>AI Persona (system prompt)</label><textarea id="edit-persona" placeholder="You are a helpful counsellor at [Company]. You help students choose the right course..."></textarea></div>
+      <div class="mf"><label>WhatsApp Number (from)</label><input id="edit-wa-phone" placeholder="whatsapp:+14155238886"/></div>
+      <div class="mf"><label>WhatsApp Demo Mode</label><select id="edit-wa-demo"><option value="true">Demo (no real messages)</option><option value="false">Live</option></select></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-g" onclick="closeModal('modal-edit')">Cancel</button>
+      <button class="btn btn-p" onclick="saveEdit()"><i class="fa fa-save"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '';
+let TOKEN = localStorage.getItem('sa_token') || '';
+let ADMIN = JSON.parse(localStorage.getItem('sa_user') || '{}');
+let allCompanies = [];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+async function api(method, path, body=null) {
+  const headers = { Authorization: `Bearer ${TOKEN}` };
+  if (body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({detail:'Error'}));
+    throw new Error(e.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function planBadge(plan) {
+  const m = { trial:'y', starter:'b', growth:'o', enterprise:'p' };
+  return `<span class="badge ${m[plan]||'b'}">${plan||'trial'}</span>`;
+}
+
+function statusBadge(active) {
+  return active ? `<span class="badge g">Active</span>` : `<span class="badge r">Inactive</span>`;
+}
+
+function copy(text) {
+  navigator.clipboard.writeText(text);
+  showToast('📋 Copied!', 'info');
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!email || !pass) { document.getElementById('l-err').textContent = 'Fill both fields'; return; }
+  try {
+    const r = await fetch(API + '/api/v1/auth/super-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const d = await r.json();
+    TOKEN = d.access_token; ADMIN = d.user;
+    localStorage.setItem('sa_token', TOKEN);
+    localStorage.setItem('sa_user', JSON.stringify(ADMIN));
+    bootApp();
+  } catch(e) {
+    document.getElementById('l-err').textContent = e.message;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('sa_token');
+  localStorage.removeItem('sa_user');
+  TOKEN = ''; ADMIN = {};
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sb-admin-email').textContent = ADMIN.email || '—';
+  document.getElementById('tb-email').textContent = ADMIN.email || '—';
+  await loadAll();
+}
+
+async function loadAll() {
+  await loadCompanies();
+  renderOverview();
+}
+
+async function refreshAll() {
+  showToast('Refreshing...', 'info');
+  await loadAll();
+  showToast('✅ Refreshed!');
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const titles = {
+    overview: 'Overview', companies: 'All Companies',
+    'create-company': 'Add New Company', settings: 'Global Settings'
+  };
+  document.getElementById('tb-title').textContent = titles[name] || name;
+
+  if (name === 'companies') renderCompanies();
+  if (name === 'settings') loadSettings();
+}
+
+// ── Load Companies ────────────────────────────────────────────────────────────
+async function loadCompanies() {
+  try {
+    const d = await api('GET', '/api/v1/companies');
+    allCompanies = d.companies || [];
+    document.getElementById('nb-companies').textContent = allCompanies.length;
+  } catch(e) {
+    console.error('Load companies error:', e);
+    allCompanies = [];
+  }
+}
+
+// ── Render Overview ───────────────────────────────────────────────────────────
+async function renderOverview() {
+  const active = allCompanies.filter(c => c.is_active).length;
+  document.getElementById('ov-companies').textContent = allCompanies.length;
+  document.getElementById('ov-active').textContent = active;
+
+  // Load stats for all companies
+  let totalLeads = 0, totalKB = 0;
+  const statsPromises = allCompanies.map(c =>
+    api('GET', `/api/v1/companies/${c.slug}/stats`).catch(() => null)
+  );
+  const statsResults = await Promise.all(statsPromises);
+  statsResults.forEach(s => {
+    if (s) { totalLeads += s.total_leads || 0; totalKB += s.kb_chunks || 0; }
+  });
+
+  document.getElementById('ov-leads').textContent = totalLeads;
+  document.getElementById('ov-kb').textContent = totalKB;
+
+  // Render overview table
+  const tbody = document.getElementById('ov-companies-body');
+  if (!allCompanies.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fa fa-building"></i><br>No companies yet. <a href="#" onclick="goPage('create-company')" style="color:var(--accent)">Create the first one →</a></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = allCompanies.map((c, i) => {
+    const stats = statsResults[i];
+    const leads = stats?.total_leads || 0;
+    const users = stats?.total_users || 0;
+    const aiOn = !c.wa_demo_mode;
+    const leadsUsedPct = c.max_leads ? Math.round(leads / c.max_leads * 100) : 0;
+    return `<tr style="cursor:pointer" onclick="openCompanyDetail('${c.slug}')">
+      <td><div class="td-b">${c.name}</div><div class="td-s">${c.domain || '—'}</div></td>
+      <td><code style="font-size:10px;color:var(--accent)">${c.slug}</code></td>
+      <td style="font-size:11px;color:var(--mid)">${c.industry || '—'}</td>
+      <td>${planBadge(c.plan)}</td>
+      <td>
+        <div style="font-size:12px;font-weight:600">${leads} / ${c.max_leads}</div>
+        <div class="pbar-wrap"><div class="pbar ${leadsUsedPct>90?'danger':leadsUsedPct>70?'warn':''}" style="width:${leadsUsedPct}%"></div></div>
+      </td>
+      <td style="font-size:12px">${users}</td>
+      <td><span class="badge ${aiOn?'g':'r'}">${aiOn?'ON':'OFF'}</span></td>
+      <td>${statusBadge(c.is_active)}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-b btn-sm" onclick="openCompanyDetail('${c.slug}')" title="Details"><i class="fa fa-eye"></i></button>
+          <button class="btn btn-g btn-sm" onclick="openEdit('${c.slug}')" title="Edit"><i class="fa fa-pen"></i></button>
+          <button class="btn ${c.is_active?'btn-r':'btn-gr'} btn-sm" onclick="toggleActive('${c.slug}',${c.is_active})" title="${c.is_active?'Deactivate':'Activate'}">
+            <i class="fa fa-${c.is_active?'ban':'check'}"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Render Companies Page ─────────────────────────────────────────────────────
+function renderCompanies() {
+  const q = document.getElementById('co-search')?.value?.toLowerCase() || '';
+  const plan = document.getElementById('co-filter-plan')?.value || '';
+  const status = document.getElementById('co-filter-status')?.value || '';
+
+  let filtered = allCompanies;
+  if (q) filtered = filtered.filter(c =>
+    c.name.toLowerCase().includes(q) || c.slug.includes(q) || (c.domain||'').includes(q)
+  );
+  if (plan) filtered = filtered.filter(c => c.plan === plan);
+  if (status !== '') filtered = filtered.filter(c => String(+c.is_active) === status);
+
+  const tbody = document.getElementById('companies-body');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fa fa-search"></i><br>No companies match your filter</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(c => `<tr style="cursor:pointer" onclick="openCompanyDetail('${c.slug}')">
+    <td><div class="td-b">${c.name}</div><div class="td-s">${c.description ? c.description.slice(0,40)+'…' : '—'}</div></td>
+    <td style="font-size:11px;color:var(--mid)">${c.domain || '—'}</td>
+    <td>${planBadge(c.plan)}</td>
+    <td style="font-size:11px">${c.max_leads} leads / ${c.max_users} users</td>
+    <td style="font-size:11px;color:var(--mid)">${(c.kb_urls||[]).length} URLs</td>
+    <td><span class="badge ${!c.wa_demo_mode?'g':'r'}">${!c.wa_demo_mode?'ON':'OFF'}</span></td>
+    <td style="font-size:11px;color:var(--mid)">${fmtDate(c.created_at)}</td>
+    <td>${statusBadge(c.is_active)}</td>
+    <td onclick="event.stopPropagation()">
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-b btn-sm" onclick="openCompanyDetail('${c.slug}')"><i class="fa fa-eye"></i></button>
+        <button class="btn btn-g btn-sm" onclick="openEdit('${c.slug}')"><i class="fa fa-pen"></i></button>
+        <button class="btn ${c.is_active?'btn-r':'btn-gr'} btn-sm" onclick="toggleActive('${c.slug}',${c.is_active})">
+          <i class="fa fa-${c.is_active?'ban':'check'}"></i>
+        </button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+// ── Company Detail Modal ──────────────────────────────────────────────────────
+async function openCompanyDetail(slug) {
+  const c = allCompanies.find(x => x.slug === slug);
+  if (!c) return;
+
+  document.getElementById('modal-co-title').textContent = `🏢 ${c.name}`;
+  document.getElementById('modal-co-body').innerHTML = `<div style="text-align:center;padding:20px"><i class="fa fa-spinner fa-spin" style="font-size:20px;color:var(--mid)"></i></div>`;
+  openModal('modal-company');
+
+  document.getElementById('modal-co-edit-btn').onclick = () => { closeModal('modal-company'); openEdit(slug); };
+  document.getElementById('modal-co-deact-btn').onclick = () => toggleActive(slug, c.is_active);
+  document.getElementById('modal-co-deact-btn').textContent = c.is_active ? '🚫 Deactivate' : '✅ Activate';
+
+  // Load stats
+  let stats = null;
+  try { stats = await api('GET', `/api/v1/companies/${slug}/stats`); } catch(e) {}
+
+  const base = window.location.origin;
+  const urls = c.kb_urls || [];
+  const aiOn = !c.wa_demo_mode;
+  const leadsUsedPct = stats ? Math.round((stats.total_leads||0) / c.max_leads * 100) : 0;
+
+  document.getElementById('modal-co-body').innerHTML = `
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px">
+      <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+        <div style="font-family:var(--font-head);font-size:22px;font-weight:800">${stats?.total_leads||0}</div>
+        <div style="font-size:10px;color:var(--mid)">Leads</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+        <div style="font-family:var(--font-head);font-size:22px;font-weight:800">${stats?.hot_leads||0}</div>
+        <div style="font-size:10px;color:var(--mid)">Hot Leads</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+        <div style="font-family:var(--font-head);font-size:22px;font-weight:800">${stats?.total_users||0}</div>
+        <div style="font-size:10px;color:var(--mid)">Users</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+        <div style="font-family:var(--font-head);font-size:22px;font-weight:800">${stats?.kb_chunks||0}</div>
+        <div style="font-size:10px;color:var(--mid)">KB Chunks</div>
+      </div>
+    </div>
+
+    <!-- Details grid -->
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-lbl">Slug</div><div class="detail-val"><code style="color:var(--accent)">${c.slug}</code></div></div>
+      <div class="detail-item"><div class="detail-lbl">Domain</div><div class="detail-val">${c.domain||'—'}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Plan</div><div class="detail-val">${planBadge(c.plan)}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Industry</div><div class="detail-val">${c.industry||'—'}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Leads Usage</div>
+        <div class="detail-val">${stats?.total_leads||0} / ${c.max_leads}
+          <div class="pbar-wrap"><div class="pbar ${leadsUsedPct>90?'danger':leadsUsedPct>70?'warn':''}" style="width:${leadsUsedPct}%"></div></div>
+        </div>
+      </div>
+      <div class="detail-item"><div class="detail-lbl">AI Language</div><div class="detail-val">${c.ai_language||'hinglish'}</div></div>
+      <div class="detail-item"><div class="detail-lbl">AI Auto-Reply</div><div class="detail-val"><span class="badge ${aiOn?'g':'r'}">${aiOn?'ON':'OFF'}</span></div></div>
+      <div class="detail-item"><div class="detail-lbl">Status</div><div class="detail-val">${statusBadge(c.is_active)}</div></div>
+    </div>
+
+    <!-- Embed Codes -->
+    <div style="font-size:12px;font-weight:700;color:var(--hi);margin-top:4px">Embed Codes</div>
+    <div>
+      <div style="font-size:10px;color:var(--mid);margin-bottom:5px">Widget Script (paste before &lt;/body&gt;)</div>
+      <div class="code-box">
+        <button class="copy-btn" onclick="copy('<script src=\\'${base}/api/v1/capture/${slug}/widget.js\\'><\\/script>')">Copy</button>
+        <span style="color:#93c5fd">&lt;script</span> <span style="color:#86efac">src</span>=<span style="color:#fde68a">"${base}/api/v1/capture/${slug}/widget.js"</span><span style="color:#93c5fd">&gt;&lt;/script&gt;</span>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:var(--mid);margin-bottom:5px">WhatsApp Webhook URL (set in Twilio)</div>
+      <div class="code-box">
+        <button class="copy-btn" onclick="copy('${base}/api/v1/webhooks/${slug}/whatsapp')">Copy</button>
+        <span style="color:var(--accent)">${base}/api/v1/webhooks/${slug}/whatsapp</span>
+      </div>
+    </div>
+
+    <!-- KB URLs -->
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--hi);margin-bottom:8px">Knowledge Base URLs (${urls.length})</div>
+      ${urls.length ? urls.map(u => `<div style="font-size:11px;color:var(--mid);padding:5px 0;border-bottom:1px solid var(--border)">🌐 ${u}</div>`).join('') :
+        `<div style="font-size:12px;color:var(--lo)">No URLs added yet</div>`}
+    </div>
+
+    <!-- Dashboard link -->
+    <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:8px;padding:12px;font-size:12px">
+      <b style="color:var(--accent)">Company Dashboard Login:</b><br>
+      URL: <code style="color:var(--hi)">${base}/demo/dashboard.html</code><br>
+      Slug: <code style="color:var(--hi)">${slug}</code> &nbsp;|&nbsp; Created: ${fmtDate(c.created_at)}
+    </div>
+  `;
+}
+
+// ── Create Company ────────────────────────────────────────────────────────────
+function autoSlug() {
+  const name = document.getElementById('cc-name').value;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  document.getElementById('cc-slug').value = slug;
+  document.getElementById('slug-preview').textContent = slug || '...';
+}
+
+async function createCompany() {
+  const name = document.getElementById('cc-name').value.trim();
+  const slug = document.getElementById('cc-slug').value.trim();
+  const adminName  = document.getElementById('cc-admin-name').value.trim();
+  const adminEmail = document.getElementById('cc-admin-email').value.trim();
+  const adminPass  = document.getElementById('cc-admin-pass').value.trim();
+
+  if (!name || !slug) { showToast('Company name and slug required', 'err'); return; }
+
+  const btn = document.getElementById('cc-btn');
+  btn.innerHTML = '<span class="spinner"></span> Creating...';
+  btn.disabled = true;
+
+  try {
+    // Create company
+    const company = await api('POST', '/api/v1/companies', {
+      name,
+      slug,
+      domain: document.getElementById('cc-domain').value.trim() || null,
+      industry: document.getElementById('cc-industry').value.trim() || null,
+      description: document.getElementById('cc-desc').value.trim() || null,
+      plan: document.getElementById('cc-plan').value,
+      max_users: parseInt(document.getElementById('cc-users').value) || 5,
+      max_leads: parseInt(document.getElementById('cc-leads').value) || 500,
+      ai_language: document.getElementById('cc-lang').value,
+    });
+
+    let adminCreated = false;
+    // Create admin user if provided
+    if (adminName && adminEmail && adminPass) {
+      try {
+        await api('POST', `/api/v1/companies/${slug}/admin?email=${encodeURIComponent(adminEmail)}&name=${encodeURIComponent(adminName)}&password=${encodeURIComponent(adminPass)}`);
+        adminCreated = true;
+      } catch(e) {
+        console.warn('Admin creation failed:', e.message);
+      }
+    }
+
+    // Show success
+    const result = document.getElementById('cc-result');
+    result.style.display = 'block';
+    result.innerHTML = `
+      <div style="color:var(--green);font-weight:700;font-size:14px;margin-bottom:10px">✅ Company "${name}" created!</div>
+      <div style="font-size:12px;color:var(--mid);line-height:1.8">
+        DB: <code style="color:var(--hi)">${company.company.db_path}</code><br>
+        ${adminCreated ? `Admin: <code style="color:var(--hi)">${adminEmail}</code> ✅` : '⚠️ No admin created — add manually via Companies page'}
+      </div>`;
+
+    showToast(`✅ ${name} created!`);
+    await loadAll();
+
+  } catch(e) {
+    showToast(e.message, 'err');
+  }
+
+  btn.innerHTML = '<i class="fa fa-building"></i> Create Company';
+  btn.disabled = false;
+}
+
+// ── Edit Company ──────────────────────────────────────────────────────────────
+function openEdit(slug) {
+  const c = allCompanies.find(x => x.slug === slug);
+  if (!c) return;
+  document.getElementById('edit-slug').value = slug;
+  document.getElementById('edit-name').value = c.name || '';
+  document.getElementById('edit-domain').value = c.domain || '';
+  document.getElementById('edit-plan').value = c.plan || 'trial';
+  document.getElementById('edit-max-users').value = c.max_users || 5;
+  document.getElementById('edit-max-leads').value = c.max_leads || 500;
+  document.getElementById('edit-lang').value = c.ai_language || 'hinglish';
+  document.getElementById('edit-persona').value = c.ai_persona || '';
+  document.getElementById('edit-wa-phone').value = c.wa_phone_from || '';
+  document.getElementById('edit-wa-demo').value = c.wa_demo_mode ? 'true' : 'false';
+  openModal('modal-edit');
+}
+
+async function saveEdit() {
+  const slug = document.getElementById('edit-slug').value;
+  try {
+    await api('PATCH', `/api/v1/companies/${slug}`, {
+      name: document.getElementById('edit-name').value,
+      domain: document.getElementById('edit-domain').value || null,
+      plan: document.getElementById('edit-plan').value,
+      max_users: parseInt(document.getElementById('edit-max-users').value),
+      max_leads: parseInt(document.getElementById('edit-max-leads').value),
+      ai_language: document.getElementById('edit-lang').value,
+      ai_persona: document.getElementById('edit-persona').value || null,
+      wa_phone_from: document.getElementById('edit-wa-phone').value || null,
+      wa_demo_mode: document.getElementById('edit-wa-demo').value === 'true',
+    });
+    closeModal('modal-edit');
+    showToast('✅ Company updated!');
+    await loadAll();
+    renderCompanies();
+  } catch(e) { showToast(e.message, 'err'); }
+}
+
+// ── Toggle Active ─────────────────────────────────────────────────────────────
+async function toggleActive(slug, currentlyActive) {
+  const action = currentlyActive ? 'deactivate' : 'activate';
+  if (!confirm(`${action.charAt(0).toUpperCase()+action.slice(1)} company "${slug}"?`)) return;
+  try {
+    if (currentlyActive) {
+      await api('DELETE', `/api/v1/companies/${slug}`);
+    } else {
+      await api('PATCH', `/api/v1/companies/${slug}`, { is_active: true });
+    }
+    showToast(`✅ Company ${action}d!`);
+    closeModal('modal-company');
+    await loadAll();
+    renderCompanies();
+  } catch(e) { showToast(e.message, 'err'); }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function loadSettings() {
+  document.getElementById('sa-info').innerHTML = `
+    <div style="display:grid;gap:8px">
+      <div><span style="color:var(--lo);font-size:10px;text-transform:uppercase;letter-spacing:.7px">Email</span><br>${ADMIN.email||'—'}</div>
+      <div><span style="color:var(--lo);font-size:10px;text-transform:uppercase;letter-spacing:.7px">Role</span><br><span class="badge o">Super Admin</span></div>
+    </div>`;
+}
+
+// ── Keyboard shortcut ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+    doLogin();
+  }
+});
+
+// ── Auto-boot ─────────────────────────────────────────────────────────────────
+if (TOKEN) {
+  bootApp();
+} else {
+  document.getElementById('login-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>

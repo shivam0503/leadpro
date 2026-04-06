@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hot Leads - LeadPro Dashboard</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --leadpro-orange: #e8862a;
+      --leadpro-bg: #ffffff;
+      --leadpro-text: #1e2a3a;
+      --leadpro-muted: #6b7b8d;
+      --leadpro-border: #e5e8ec;
+      --leadpro-card-bg: #ffffff;
+      --leadpro-input-bg: #ffffff;
+      --leadpro-kpi-gradient: linear-gradient(135deg, #fffaf5 0%, #fffaf5 100%);
+      --leadpro-btn-gradient: linear-gradient(135deg, #e8862a 0%, #f5a623 100%);
+      --leadpro-btn-shadow: 0 2px 8px rgba(232, 134, 42, 0.3);
+      --leadpro-card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.04);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--leadpro-text);
+      margin: 0;
+      background: var(--leadpro-bg);
+    }
+    .h-8 { height: 2rem; }
+    .leadpro-header {
+      background: var(--leadpro-card-bg);
+      border-bottom: 1px solid var(--leadpro-border);
+      padding: 0.75rem 1.5rem;
+    }
+    .card-leadpro {
+      background: var(--leadpro-card-bg);
+      border: 1px solid var(--leadpro-border);
+      border-radius: 0.75rem;
+      box-shadow: var(--leadpro-card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card { background: var(--leadpro-kpi-gradient); }
+    .kpi-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--leadpro-muted);
+      margin-bottom: 0.25rem;
+    }
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--leadpro-text);
+    }
+    .btn-accent {
+      background: var(--leadpro-btn-gradient);
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: var(--leadpro-btn-shadow);
+    }
+    .btn-accent:hover { color: #fff; }
+    .input-leadpro {
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--leadpro-border);
+      background: var(--leadpro-input-bg);
+      padding: 0 0.75rem;
+      font-size: 0.875rem;
+      color: var(--leadpro-text);
+      outline: none;
+    }
+    .input-leadpro:focus {
+      border-color: var(--leadpro-orange);
+      box-shadow: 0 0 0 3px rgba(232,134,42,0.15);
+    }
+    .nav-link.active {
+      background: var(--leadpro-orange) !important;
+      border-color: var(--leadpro-orange) !important;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="leadpro-header d-flex align-items-center justify-content-between">
+    <a href="/demo/" class="text-decoration-none">
+      <span style="font-size:1.3rem;font-weight:800;color:#e8862a;letter-spacing:-0.5px;">Lead<span style="color:#1e2a3a;">Pro</span></span>
+    </a>
+
+    <div class="d-flex align-items-center gap-2">
+      <input id="apiBase" type="text" class="input-leadpro" style="width:260px;font-size:0.75rem;" placeholder="API Base URL (blank = same-origin)" />
+      <button id="btnPing" class="btn-accent btn-sm"><i class="fa-solid fa-satellite-dish me-1"></i>Ping</button>
+    </div>
+  </nav>
+
+  <div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+      <div>
+        <h1 class="h4 mb-1">Hot Leads</h1>
+        <div class="text-muted" style="font-size:0.9rem;">Filter by date, view metrics, export Excel.</div>
+      </div>
+
+      <ul class="nav nav-pills">
+        <li class="nav-item"><a class="nav-link " href="/demo/total-leads/">Total Leads</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/demo/hot-leads/">Hot Leads</a></li>
+        <li class="nav-item"><a class="nav-link " href="/demo/conversion/">Conversion</a></li>
+        <li class="nav-item"><a class="nav-link " href="/demo/revenue/">Revenue</a></li>
+      </ul>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="card-leadpro p-3 mb-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">Start date</label>
+          <input id="startDate" type="date" class="form-control" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">End date</label>
+          <input id="endDate" type="date" class="form-control" />
+        </div>
+        <div class="col-12 col-md-6 d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-secondary" id="presetToday">Today</button>
+          <button class="btn btn-outline-secondary" id="presetLast7">Last 7 Days</button>
+          <button class="btn btn-outline-secondary" id="presetThisMonth">This Month</button>
+          <button class="btn btn-accent" id="btnApply"><i class="fa-solid fa-filter me-1"></i>Apply</button>
+          <button class="btn btn-outline-danger" id="btnClear"><i class="fa-solid fa-eraser me-1"></i>Clear</button>
+          <button class="btn btn-outline-success ms-auto" id="btnExport"><i class="fa-solid fa-file-excel me-1"></i>Download Excel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-lg-4">
+        <div class="card-leadpro kpi-card p-4">
+          <div class="kpi-label">Hot Leads</div>
+          <div class="kpi-value" id="kpiValue">—</div>
+          <div class="text-muted mt-1" style="font-size:0.85rem;" id="kpiSub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card-leadpro p-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="fw-semibold">Leads</div>
+        <div class="text-muted" style="font-size:0.85rem;" id="tableMeta">—</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Lead Name</th>
+              <th>Phone/WhatsApp</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr><td colspan="7" class="text-muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function getApiBase() {
+      return (localStorage.getItem('apiBase') || '').trim();
+    }
+    function setApiBase(v) {
+      localStorage.setItem('apiBase', (v || '').trim());
+    }
+    function api(path) {
+      const base = getApiBase();
+      return base ? (base.replace(/\/$/, '') + path) : path;
+    }
+
+    async function ping() {
+      try {
+        const res = await fetch(api('/api/v1/health'));
+        if (!res.ok) throw new Error(await res.text());
+        alert('API Online ✅');
+      } catch (e) {
+        alert('API Offline ❌');
+      }
+    }
+
+    function fmtDate(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function setLast7Days() {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 6);
+      $('#startDate').val(fmtDate(start));
+      $('#endDate').val(fmtDate(end));
+    }
+
+    function setToday() {
+      const t = new Date();
+      $('#startDate').val(fmtDate(t));
+      $('#endDate').val(fmtDate(t));
+    }
+
+    function setThisMonth() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth()+1, 0);
+      $('#startDate').val(fmtDate(start));
+      $('#endDate').val(fmtDate(end));
+    }
+
+    function getRangeParams() {
+      const s = $('#startDate').val();
+      const e = $('#endDate').val();
+      const params = new URLSearchParams();
+      if (s) params.set('start_date', s);
+      if (e) params.set('end_date', e);
+      return params;
+    }
+
+    async function loadSummary() {
+      const params = getRangeParams();
+      const url = api('/api/v1/metrics/summary?' + params.toString());
+      const res = await fetch(url);
+      if (!res.ok) {
+        $('#kpiValue').text('—');
+        $('#kpiSub').text('Failed to load metrics');
+        return;
+      }
+      const j = await res.json();
+
+      let v = j['hot_leads'];
+      if (v === undefined || v === null) v = '—';
+
+      // formatting for conversion %
+      if ('hot' === 'conversion') {
+        $('#kpiValue').text((j.conversion_pct ?? 0) + '%');
+        $('#kpiSub').text('Converted leads: ' + (j.converted_leads ?? 0));
+      } else if ('hot' === 'revenue') {
+        $('#kpiValue').text(j.revenue_forecast ?? 0);
+        $('#kpiSub').text('Forecast proxy based on lead scores');
+      } else {
+        $('#kpiValue').text(v);
+        $('#kpiSub').text('Range: ' + (j.range?.start_date || 'all') + ' → ' + (j.range?.end_date || 'now'));
+      }
+    }
+
+    async function loadTable() {
+      const params = getRangeParams();
+      params.set('limit', '200');
+      params.set('offset', '0');
+
+      // page-specific filter
+      if ('hot' === 'hot') {
+        params.set('status', 'hot');
+      } else if ('hot' === 'conversion') {
+        params.set('status', 'converted');
+      }
+
+      const url = api('/api/v1/leads?' + params.toString());
+      const res = await fetch(url);
+      if (!res.ok) {
+        $('#rows').html('<tr><td colspan="7" class="text-danger">Failed to load leads</td></tr>');
+        return;
+      }
+      const leads = await res.json();
+      $('#tableMeta').text('Showing ' + leads.length + ' lead(s)');
+
+      if (!leads.length) {
+        $('#rows').html('<tr><td colspan="7" class="text-muted">No leads found for selected range.</td></tr>');
+        return;
+      }
+
+      const rows = leads.map(l => {
+        const created = (l.created_at || '').toString().replace('T', ' ').replace('Z','');
+        return `
+          <tr>
+            <td>${l.id}</td>
+            <td>${(l.company || '')}</td>
+            <td>${(l.phone || '')}</td>
+            <td>${(l.source || '')}</td>
+            <td>${(l.status || '')}</td>
+            <td>${(l.score ?? '')}</td>
+            <td>${created}</td>
+          </tr>
+        `;
+      }).join('');
+      $('#rows').html(rows);
+    }
+
+    function exportExcel() {
+      const params = getRangeParams();
+      params.set('type', 'hot');
+      const url = api('/api/v1/export/leads.xlsx?' + params.toString());
+      window.location.href = url;
+    }
+
+    async function reloadAll() {
+      await loadSummary();
+      await loadTable();
+    }
+
+    $(function() {
+      // restore api base
+      $('#apiBase').val(getApiBase());
+      $('#apiBase').on('change', function() { setApiBase($(this).val()); });
+      $('#btnPing').on('click', ping);
+
+      // default: last 7 days
+      setLast7Days();
+
+      $('#presetToday').on('click', function() { setToday(); });
+      $('#presetLast7').on('click', function() { setLast7Days(); });
+      $('#presetThisMonth').on('click', function() { setThisMonth(); });
+
+      $('#btnApply').on('click', reloadAll);
+      $('#btnClear').on('click', function() {
+        $('#startDate').val('');
+        $('#endDate').val('');
+        reloadAll();
+      });
+      $('#btnExport').on('click', exportExcel);
+
+      reloadAll();
+    });
+  </script>
+</body>
+</html>

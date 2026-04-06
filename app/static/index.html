@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadPro AI — The AI-Powered WhatsApp CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --surface: #0d1120;
+  --surface2: #131829;
+  --border: rgba(255,255,255,0.07);
+  --accent: #00e5ff;
+  --accent2: #7c3aed;
+  --accent3: #10b981;
+  --text: #f0f4ff;
+  --muted: #7a85a3;
+  --wa: #25D366;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ── Ambient glows ── */
+.glow-1 {
+  position: fixed;
+  top: -20%;
+  left: -10%;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: driftA 18s ease-in-out infinite alternate;
+}
+.glow-2 {
+  position: fixed;
+  bottom: -20%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(124,58,237,0.09) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: driftB 22s ease-in-out infinite alternate;
+}
+@keyframes driftA { from { transform: translate(0,0) } to { transform: translate(60px, 40px) } }
+@keyframes driftB { from { transform: translate(0,0) } to { transform: translate(-50px, -30px) } }
+
+/* ── Nav ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(5,8,16,0.7);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+.logo span { color: var(--accent); }
+
+nav .nav-links { display: flex; gap: 32px; list-style: none; }
+nav .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+nav .nav-links a:hover { color: var(--text); }
+
+.nav-cta {
+  background: linear-gradient(135deg, var(--accent), #00b4cc);
+  color: #000;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: opacity .2s, transform .2s;
+  letter-spacing: 0.3px;
+}
+.nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 140px 24px 80px;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  animation: fadeUp .6s ease both;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(46px, 7vw, 88px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  max-width: 900px;
+  animation: fadeUp .7s .1s ease both;
+}
+h1 .line2 { color: var(--accent); }
+h1 .line3 {
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-sub {
+  margin-top: 24px;
+  font-size: clamp(16px, 2vw, 20px);
+  color: var(--muted);
+  max-width: 560px;
+  font-weight: 300;
+  line-height: 1.7;
+  animation: fadeUp .7s .2s ease both;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 44px;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: fadeUp .7s .3s ease both;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--accent), #00b8d4);
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 16px 32px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+  box-shadow: 0 0 40px rgba(0,229,255,0.25);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(0,229,255,0.35); }
+.btn-primary svg { width: 18px; height: 18px; fill: #000; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 500;
+  font-size: 15px;
+  padding: 16px 32px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: border-color .2s, background .2s;
+}
+.btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+.btn-secondary svg { width: 16px; height: 16px; fill: var(--muted); }
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex;
+  gap: 0;
+  margin-top: 80px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--surface);
+  animation: fadeUp .7s .4s ease both;
+  max-width: 700px;
+  width: 100%;
+}
+.stat {
+  flex: 1;
+  padding: 28px 24px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.stat:last-child { border-right: none; }
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+.stat-num span { color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+/* ── Section ── */
+section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+}
+h2 .accent { color: var(--accent); }
+
+.section-sub {
+  font-size: 18px;
+  color: var(--muted);
+  margin-top: 16px;
+  max-width: 540px;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ── Feature grid ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  overflow: hidden;
+  margin-top: 60px;
+}
+
+.feature-card {
+  background: var(--surface);
+  padding: 40px 36px;
+  position: relative;
+  overflow: hidden;
+  transition: background .3s;
+}
+.feature-card:hover { background: var(--surface2); }
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+  font-size: 24px;
+}
+.ic-cyan { background: rgba(0,229,255,0.1); }
+.ic-purple { background: rgba(124,58,237,0.1); }
+.ic-green { background: rgba(16,185,129,0.1); }
+.ic-orange { background: rgba(251,146,60,0.1); }
+.ic-pink { background: rgba(244,63,94,0.1); }
+.ic-blue { background: rgba(59,130,246,0.1); }
+
+.feature-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+.feature-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* ── How it works ── */
+.how-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  margin-top: 60px;
+}
+
+.flow-steps { display: flex; flex-direction: column; gap: 0; }
+
+.flow-step {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  padding-bottom: 36px;
+}
+.flow-step:last-child { padding-bottom: 0; }
+.flow-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 44px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent2), transparent);
+}
+
+.step-num {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.step-content { padding-top: 6px; }
+.step-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.step-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* ── Mock phone ── */
+.phone-mockup {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.phone-frame {
+  width: 280px;
+  background: #0d1120;
+  border-radius: 40px;
+  border: 2px solid rgba(255,255,255,0.1);
+  padding: 16px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  position: relative;
+}
+.phone-notch {
+  width: 80px; height: 24px;
+  background: #050810;
+  border-radius: 0 0 16px 16px;
+  margin: 0 auto 12px;
+}
+.chat-bubble {
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 88%;
+  animation: popIn .4s ease both;
+}
+.bubble-in {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.bubble-out {
+  background: linear-gradient(135deg, #128c7e, #25D366);
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+  margin-left: auto;
+}
+.bubble-ai {
+  background: rgba(124,58,237,0.2);
+  border: 1px solid rgba(124,58,237,0.3);
+  color: var(--text);
+  font-size: 12px;
+}
+.bubble-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+.typing-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--surface2);
+  border-radius: 18px 18px 18px 4px;
+  margin-bottom: 10px;
+}
+.typing-dots span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: typingBounce 1.2s ease infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes typingBounce { 0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)} }
+
+.phone-glow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse, rgba(37,211,102,0.12) 0%, transparent 70%);
+  z-index: -1;
+  border-radius: 50%;
+}
+
+/* ── Widget preview ── */
+.widgets-section { text-align: center; }
+
+.widget-tabs {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 6px;
+  margin: 40px 0 50px;
+}
+.widget-tab {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all .2s;
+  border: none;
+  background: none;
+}
+.widget-tab.active {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.embed-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: left;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.embed-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.embed-code {
+  background: #080c18;
+  border: 1px solid rgba(0,229,255,0.12);
+  border-radius: 14px;
+  padding: 20px 24px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #a5f3fc;
+  overflow-x: auto;
+  position: relative;
+}
+.embed-code .tag { color: #7dd3fc; }
+.embed-code .attr { color: #86efac; }
+.embed-code .val { color: #fcd34d; }
+.copy-btn {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: rgba(0,229,255,0.1);
+  border: 1px solid rgba(0,229,255,0.2);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .2s;
+  letter-spacing: 0.5px;
+}
+.copy-btn:hover { background: rgba(0,229,255,0.2); }
+
+.embed-note {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.embed-note-icon {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  background: rgba(16,185,129,0.15);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+/* ── Multi-tenant section ── */
+.tenant-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 60px;
+}
+.tenant-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  transition: border-color .3s;
+}
+.tenant-card:hover { border-color: rgba(0,229,255,0.2); }
+.tenant-card-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+.tenant-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.tenant-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* ── API section ── */
+.api-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 60px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  margin-top: 40px;
+}
+.api-endpoints { display: flex; flex-direction: column; gap: 10px; }
+.api-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #080c18;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-family: monospace;
+  font-size: 13px;
+  transition: border-color .2s;
+}
+.api-endpoint:hover { border-color: rgba(0,229,255,0.2); }
+.method {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  font-family: 'DM Sans', sans-serif;
+}
+.m-post { background: rgba(16,185,129,0.15); color: #34d399; }
+.m-get { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.m-patch { background: rgba(251,146,60,0.15); color: #fb923c; }
+.ep-path { color: var(--muted); flex: 1; }
+.ep-desc { font-size: 11px; color: rgba(122,133,163,0.7); font-family: 'DM Sans', sans-serif; }
+
+/* ── CTA ── */
+.cta-section {
+  text-align: center;
+  padding: 120px 24px;
+  position: relative;
+  z-index: 1;
+}
+.cta-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 300px;
+  background: radial-gradient(ellipse, rgba(0,229,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-section h2 { font-size: clamp(36px, 5vw, 64px); }
+.cta-section .section-sub { margin: 20px auto 0; text-align: center; }
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.footer-left { color: var(--muted); font-size: 13px; }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { color: var(--muted); text-decoration: none; font-size: 13px; transition: color .2s; }
+.footer-links a:hover { color: var(--text); }
+
+/* ── Scroll animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.9) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  nav { padding: 16px 20px; }
+  nav .nav-links { display: none; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .how-grid { grid-template-columns: 1fr; }
+  .phone-mockup { order: -1; }
+  .tenant-grid { grid-template-columns: 1fr; }
+  .api-section { grid-template-columns: 1fr; padding: 32px; gap: 32px; }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+}
+@media (max-width: 600px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .stats-bar { flex-direction: column; }
+  .stat { border-right: none; border-bottom: 1px solid var(--border); }
+  .stat:last-child { border-bottom: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    Lead<span>Pro</span> AI
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#widgets">Widgets</a></li>
+    <li><a href="#api">API</a></li>
+  </ul>
+  <a href="/demo/superadmin.html" class="nav-cta">Open Dashboard →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    AI-Powered WhatsApp CRM · Multi-tenant SaaS
+  </div>
+  <h1>
+    Convert Every Lead<br>
+    <span class="line2">with AI on WhatsApp</span>
+  </h1>
+  <p class="hero-sub">
+    LeadPro captures leads from your website, engages them instantly via WhatsApp with an AI counsellor, and tracks every conversation — automatically.
+  </p>
+  <div class="hero-actions">
+    <a href="/demo/superadmin.html" class="btn-primary">
+      <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Get Started Free
+    </a>
+    <a href="/docs" class="btn-secondary">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+      View API Docs
+    </a>
+  </div>
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num"><span>∞</span></div>
+      <div class="stat-label">Multi-tenant Companies</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">AI<span>+</span></div>
+      <div class="stat-label">Auto WhatsApp Replies</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">1<span>min</span></div>
+      <div class="stat-label">Widget Setup Time</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="reveal">
+    <div class="section-label">Core Features</div>
+    <h2>Everything you need to<br><span class="accent">close more leads</span></h2>
+    <p class="section-sub">A complete lead management platform — from capture to conversion, powered by AI at every step.</p>
+  </div>
+  <div class="features-grid reveal">
+    <div class="feature-card">
+      <div class="feature-icon ic-green">���</div>
+      <div class="feature-title">WhatsApp AI Auto-Reply</div>
+      <div class="feature-desc">When a lead messages you, the AI counsellor replies instantly — in Hinglish, English, or Arabic — with accurate course info and CTAs. Zero manual effort.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-cyan">���</div>
+      <div class="feature-title">Smart Lead Capture</div>
+      <div class="feature-desc">Floating form and WhatsApp widgets embed on any website with one line of code. Phone, email, course interest — all captured automatically.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-purple">���</div>
+      <div class="feature-title">Multi-tenant Architecture</div>
+      <div class="feature-desc">Each company gets a fully isolated database, custom AI persona, and separate WhatsApp configuration. One platform, unlimited clients.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-orange">���</div>
+      <div class="feature-title">Knowledge Base AI</div>
+      <div class="feature-desc">Scrape your website URLs to train the AI with real course fees, batch details, and policies. The AI only answers from verified data.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-pink">���</div>
+      <div class="feature-title">Lead Scoring & Hot Leads</div>
+      <div class="feature-desc">Every lead gets an AI score based on intent signals. Hot leads (40+ score) surface automatically so your team focuses on what converts.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-blue">���</div>
+      <div class="feature-title">LeadSquared Integration</div>
+      <div class="feature-desc">Sync leads and activities directly into LeadSquared CRM. Per-company credentials, demo mode for testing, and full owner assignment support.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="reveal">
+    <div class="section-label">How It Works</div>
+    <h2>From first message to<br><span class="accent">enrolled student</span></h2>
+  </div>
+  <div class="how-grid">
+    <div class="flow-steps reveal">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Lead lands on your website</div>
+          <div class="step-desc">The LeadPro widget auto-loads on your website. Visitor clicks WhatsApp or fills the enquiry form — instantly captured in your CRM.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">AI counsellor takes over WhatsApp</div>
+          <div class="step-desc">Twilio webhook fires. The AI reads the message, checks your knowledge base, and replies in seconds — with the right course, fee, and CTA.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Lead is scored & tracked</div>
+          <div class="step-desc">Every message exchange updates the lead score. Hot leads alert your team. Full conversation history is viewable in the dashboard.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Counsellor closes the deal</div>
+          <div class="step-desc">Your team replies manually when needed, assigns leads, and syncs everything to LeadSquared — all from one dashboard.</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-mockup reveal">
+      <div class="phone-glow"></div>
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div style="padding: 8px 4px;">
+          <div style="font-size:11px; color: var(--muted); text-align:center; margin-bottom:16px; font-weight:600;">Career Launcher · WhatsApp</div>
+
+          <div class="bubble-label">Rahul, 10:42 AM</div>
+          <div class="chat-bubble bubble-in" style="animation-delay:.1s">Hi, I want to know about CAT preparation courses. What are the fees?</div>
+
+          <div class="typing-dots" style="animation-delay:.3s">
+            <span></span><span></span><span></span>
+          </div>
+
+          <div class="bubble-label" style="text-align:right; padding-right:4px;">AI Counsellor · 10:42 AM</div>
+          <div class="chat-bubble bubble-out" style="animation-delay:.6s">Rahul bhai, CAT ke liye CL ka Online Live course ₹29,999 mein available hai (originally ₹49,999)! ���<br><br>Features: 180+ live sessions, 50 mocks, personal mentorship. Enroll: bit.ly/cl-cat25</div>
+
+          <div class="chat-bubble bubble-ai" style="animation-delay:.9s; margin-top:10px;">
+            <span style="color:var(--accent); font-weight:700; font-size:11px;">��� AI auto-replied · Score: 72 · Hot Lead ⚡</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WIDGETS -->
+<section id="widgets" class="widgets-section">
+  <div class="reveal">
+    <div class="section-label">Embeddable Widgets</div>
+    <h2>One line of code.<br><span class="accent">Leads on autopilot.</span></h2>
+    <p class="section-sub" style="margin:16px auto 0">Drop a single script tag on any website. Phone number, company name, and AI settings are all pulled automatically from your admin config.</p>
+  </div>
+
+  <div class="widget-tabs reveal">
+    <button class="widget-tab active" onclick="showTab('both', this)">Both Widgets</button>
+    <button class="widget-tab" onclick="showTab('wa', this)">WhatsApp Only</button>
+    <button class="widget-tab" onclick="showTab('form', this)">Form Only</button>
+  </div>
+
+  <div id="tab-both" class="embed-card reveal">
+    <div class="embed-label">Embed Code — Both Widgets</div>
+    <div class="embed-code" style="position:relative">
+      <button class="copy-btn" onclick="copyCode('tab-both')">COPY</button>
+      <span class="tag">&lt;script</span><br>
+      &nbsp;&nbsp;<span class="attr">src</span>=<span class="val">"https://ai.sponad.com/whatsapp-crm/capture/<b>careerlauncher</b>/widget.js"</span><br>
+      &nbsp;&nbsp;<span class="attr">async</span><br>
+      <span class="tag">&gt;&lt;/script&gt;</span>
+    </div>
+    <div class="embed-note">
+      <div class="embed-note-icon">✓</div>
+      The WhatsApp number is automatically fetched from your company settings. No hardcoding needed — update it anytime from your admin panel.
+    </div>
+  </div>
+
+  <div id="tab-wa" class="embed-card reveal" style="display:none">
+    <div class="embed-label">Embed Code — WhatsApp Widget Only</div>
+    <div class="embed-code" style="position:relative">
+      <button class="copy-btn" onclick="copyCode('tab-wa')">COPY</button>
+      <span class="tag">&lt;script</span><br>
+      &nbsp;&nbsp;<span class="attr">src</span>=<span class="val">"https://ai.sponad.com/whatsapp-crm/capture/<b>careerlauncher</b>/whatsapp.js"</span><br>
+      &nbsp;&nbsp;<span class="attr">async</span><br>
+      <span class="tag">&gt;&lt;/script&gt;</span>
+    </div>
+    <div class="embed-note">
+      <div class="embed-note-icon">✓</div>
+      Shows a floating WhatsApp button with a popup card. Clicking it opens WhatsApp with a pre-filled message and tracks the click as a lead.
+    </div>
+  </div>
+
+  <div id="tab-form" class="embed-card reveal" style="display:none">
+    <div class="embed-label">Embed Code — Lead Form Widget Only</div>
+    <div class="embed-code" style="position:relative">
+      <button class="copy-btn" onclick="copyCode('tab-form')">COPY</button>
+      <span class="tag">&lt;script</span><br>
+      &nbsp;&nbsp;<span class="attr">src</span>=<span class="val">"https://ai.sponad.com/whatsapp-crm/capture/<b>careerlauncher</b>/form-widget.js"</span><br>
+      &nbsp;&nbsp;<span class="attr">async</span><br>
+      <span class="tag">&gt;&lt;/script&gt;</span>
+    </div>
+    <div class="embed-note">
+      <div class="embed-note-icon">✓</div>
+      2-step floating form that captures name, phone, email, course interest and message. Submits directly to your CRM and triggers the AI follow-up.
+    </div>
+  </div>
+</section>
+
+<!-- MULTI-TENANT -->
+<section>
+  <div class="reveal">
+    <div class="section-label">Multi-tenant SaaS</div>
+    <h2>One platform,<br><span class="accent">unlimited companies</span></h2>
+    <p class="section-sub">Each company is a fully isolated tenant — separate database, custom AI, and its own WhatsApp setup.</p>
+  </div>
+  <div class="tenant-grid reveal">
+    <div class="tenant-card">
+      <div class="tenant-card-icon">���️</div>
+      <h3>Isolated Databases</h3>
+      <p>Every company gets its own SQLite DB at <code style="color:var(--accent);font-size:12px">dbs/{slug}.db</code>. Zero data leakage between tenants. Master DB tracks companies and super admins only.</p>
+    </div>
+    <div class="tenant-card">
+      <div class="tenant-card-icon">���</div>
+      <h3>Custom AI Personas</h3>
+      <p>Each company trains the AI with their own website content and system prompt. Switch between Hinglish, English, and Arabic with one API call.</p>
+    </div>
+    <div class="tenant-card">
+      <div class="tenant-card-icon">���</div>
+      <h3>Per-company WhatsApp</h3>
+      <p>Each tenant has their own Twilio Account SID, auth token, and WhatsApp number. Inbound webhooks are routed by company slug automatically.</p>
+    </div>
+    <div class="tenant-card">
+      <div class="tenant-card-icon">���</div>
+      <h3>Super Admin Control</h3>
+      <p>Create companies, set plans, manage user limits, and monitor all tenants from a single super admin dashboard. Full RBAC with JWT tokens.</p>
+    </div>
+  </div>
+</section>
+
+<!-- API REFERENCE -->
+<section id="api">
+  <div class="api-section reveal">
+    <div>
+      <div class="section-label">REST API</div>
+      <h2>Built for<br><span class="accent">developers</span></h2>
+      <p class="section-sub" style="max-width:100%">Full OpenAPI 3.0 spec at <code style="color:var(--accent)">/docs</code>. JWT-authenticated, multi-tenant by design.</p>
+      <a href="/docs" class="btn-primary" style="margin-top:32px; display:inline-flex;">
+        View Full API Docs →
+      </a>
+    </div>
+    <div class="api-endpoints">
+      <div class="api-endpoint"><span class="method m-post">POST</span><span class="ep-path">/api/v1/auth/bootstrap</span><span class="ep-desc">Create super admin</span></div>
+      <div class="api-endpoint"><span class="method m-post">POST</span><span class="ep-path">/api/v1/companies</span><span class="ep-desc">Create company</span></div>
+      <div class="api-endpoint"><span class="method m-post">POST</span><span class="ep-path">/capture/{slug}/form</span><span class="ep-desc">Capture form lead</span></div>
+      <div class="api-endpoint"><span class="method m-post">POST</span><span class="ep-path">/webhooks/{slug}/whatsapp</span><span class="ep-desc">Twilio inbound webhook</span></div>
+      <div class="api-endpoint"><span class="method m-get">GET</span><span class="ep-path">/capture/{slug}/widget.js</span><span class="ep-desc">Serve embed widget</span></div>
+      <div class="api-endpoint"><span class="method m-get">GET</span><span class="ep-path">/api/v1/leads</span><span class="ep-desc">List all leads</span></div>
+      <div class="api-endpoint"><span class="method m-patch">PATCH</span><span class="ep-path">/api/v1/companies/{slug}</span><span class="ep-desc">Update company config</span></div>
+      <div class="api-endpoint"><span class="method m-post">POST</span><span class="ep-path">/api/v1/companies/{slug}/scrape</span><span class="ep-desc">Train AI from website</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="section-label reveal">Get Started</div>
+  <h2 class="reveal">Your AI sales team<br><span class="accent">is ready to deploy.</span></h2>
+  <p class="section-sub reveal">Set up a new company, embed the widget, and let AI handle your WhatsApp leads — in under 10 minutes.</p>
+  <div class="hero-actions reveal" style="justify-content:center; margin-top:44px">
+    <a href="/demo/superadmin.html" class="btn-primary">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#000"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Open Admin Dashboard
+    </a>
+    <a href="/docs" class="btn-secondary">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+      Read the Docs
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    © 2025 LeadPro AI CRM · Built on FastAPI + SQLite + Twilio
+  </div>
+  <div class="footer-links">
+    <a href="/docs">API Docs</a>
+    <a href="/demo/superadmin.html">Super Admin</a>
+    <a href="/demo/dashboard.html">Dashboard</a>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Widget tabs
+function showTab(tab, btn) {
+  ['both','wa','form'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.widget-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Copy code
+function copyCode(id) {
+  const el = document.getElementById(id).querySelector('.embed-code');
+  const text = el.innerText.replace('COPY\n','').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+
+// Animate chat bubbles on scroll
+const phoneMockup = document.querySelector('.phone-mockup');
+let animated = false;
+const phoneObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting && !animated) {
+    animated = true;
+    document.querySelectorAll('.chat-bubble, .typing-dots').forEach((el, i) => {
+      el.style.animationDelay = (i * 0.4) + 's';
+      el.style.animationFillMode = 'both';
+    });
+  }
+}, { threshold: 0.3 });
+if (phoneMockup) phoneObs.observe(phoneMockup);
+</script>
+</body>
+</html>
+

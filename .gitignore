@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+# Virtual environments
+.venv/
+venv/
+# Environment files
+.env
+.env.*
+!.env.example
+# Databases and local state
+*.db
+*.sqlite
+*.sqlite3
+# Logs
+*.log
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# Project-local ignores
+project/.venv/
+project/.env
+project/*.db
+project/dbs/*.db
+
+.env
+.env.local
+.env.*.local

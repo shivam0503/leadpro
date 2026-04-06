@@ -1,0 +1,858 @@
+<!--
+  file: app/static/index.html  (or demo.html)
+  LeadPro AI – Mini CRM + Agentic Follow-ups Dashboard
+  Bootstrap 5 + jQuery
+
+  Expected FastAPI endpoints:
+    GET  /api/v1/leads?limit=200&offset=0
+    GET  /api/v1/leads/{id}/notes
+    GET  /api/v1/followups/due?limit=50
+    POST /api/v1/followups/{id}/draft
+    POST /api/v1/whatsapp/send?lead_id={id}
+    POST /api/v1/followups/{id}/complete
+
+  TIP:
+    - If this page is hosted by FastAPI at /demo, keep API Base URL blank (same-origin).
+    - If API runs on another port, set API Base URL accordingly.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LeadPro AI – CRM Demo Dashboard</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    body { background: #0b1220; }
+     .fw-semibold{
+          font-weight: 600 !important;
+    color: #fff;
+}
+    label.form-label
+ {
+    color: #fff;
+}
+    .app-shell { max-width: 1200px; }
+    .card { border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
+    .text-muted-2 { color: rgba(255,255,255,.65); }
+    .form-control, .form-select, .btn { border-radius: .75rem; }
+    .badge-soft { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: .75rem;
+      padding: 12px;
+      color: #e9eefc;
+      margin: 0;
+      min-height: 120px;
+    }
+    .note-item { border-bottom: 1px dashed rgba(255,255,255,.12); padding: 10px 0; }
+    .note-item:last-child { border-bottom: none; }
+    .small-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: #fff; }
+    .table-dark { --bs-table-bg: transparent; }
+    .btn-group .btn { border-radius: .65rem !important; }
+    .btn-group .btn + .btn { margin-left: 6px; }
+  </style>
+</head>
+
+<body class="text-light">
+  <div class="container py-4 app-shell">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+      <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge badge-soft py-2 px-3"><i class="bi bi-robot"></i> LeadPro AI</span>
+          <span class="badge badge-soft py-2 px-3"><i class="bi bi-building"></i> CRM + Agentic Follow-ups</span>
+          <span class="badge badge-soft py-2 px-3"><i class="bi bi-geo"></i> Dubai Automation Demo</span>
+        </div>
+        <h1 class="h3 mt-3 mb-1">CRM Demo Dashboard</h1>
+        <div class="text-muted-2">Self-operating CRM → filters → agents → actions → transparency trace.</div>
+      </div>
+
+      <div class="card p-3" style="min-width: 320px;">
+        <label class="form-label mb-1">API Base URL</label>
+        <div class="input-group">
+          <span class="input-group-text bg-dark text-light border-0"><i class="bi bi-link-45deg"></i></span>
+          <input id="apiBase" class="form-control bg-dark text-light border-0" value="" />
+          <button id="btnPing" class="btn btn-outline-light">Ping</button>
+        </div>
+        <div class="form-text text-muted-2 mt-2">
+          Keep blank if UI is hosted by FastAPI (same-origin). If API on another port, set it here.
+        </div>
+        <div id="pingStatus" class="small mt-2"></div>
+<button id="btnRefreshTrace" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+          </div>
+          <!-- <div class="small text-muted-2 mb-2">Non-technical explanation of why LeadPro chose this action.</div>
+          <pre id="traceOut">—</pre> -->
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-lg-2">
+        <div class="card p-3">
+          <div class="small text-muted-2">Total Leads</div>
+          <div id="kpiTotalLeads" class="h4 mb-0">—</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="card p-3">
+          <div class="small text-muted-2">Hot Leads</div>
+          <div id="kpiHotLeads" class="h4 mb-0">—</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="card p-3">
+          <div class="small text-muted-2">Conversion %</div>
+          <div id="kpiConversion" class="h4 mb-0">—</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card p-3">
+          <div class="small text-muted-2">Revenue Forecast</div>
+          <div id="kpiRevenue" class="h4 mb-0">—</div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-3">
+        <div class="card p-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="small text-muted-2">AI Transparency</div>
+            <div class="form-check form-switch m-0">
+              <input class="form-check-input" type="checkbox" id="toggleTrace" checked>
+              <label class="form-check-label small" for="toggleTrace">Show AI Decision Trace</label>
+            </div>
+          </div>
+          <div class="small text-muted-2 mt-2">Explains intent, score, rule, and why.</div>
+        </div>
+<button id="btnRefreshTrace" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+          </div>
+          <div class="small text-muted-2 mb-2">Non-technical explanation of why LeadPro chose this action.</div>
+          <pre id="traceOut">—</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Left column -->
+      <div class="col-12 col-lg-5">
+        <!-- Lead selection -->
+        <div class="card p-3 mb-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold"><i class="bi bi-person-lines-fill me-2"></i>Lead</div>
+            <div class="d-flex gap-2">
+              <button id="btnRefreshLeads" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+          </div>
+
+          <label class="form-label">Select Lead</label>
+          <select id="leadSelect" class="form-select bg-dark text-light border-0">
+            <option value="">Loading...</option>
+          </select>
+
+          <div class="mt-3">
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="small text-muted-2">Status</div>
+                <div id="leadStatus" class="fw-semibold">—</div>
+              </div>
+              <div class="col-6">
+                <div class="small text-muted-2">Score</div>
+                <div id="leadScore" class="fw-semibold">—</div>
+              </div>
+              <div class="col-12">
+                <div class="small text-muted-2">Company</div>
+                <div id="leadCompany" class="fw-semibold">—</div>
+              </div>
+              <div class="col-12">
+                <div class="small text-muted-2">Website</div>
+                <div id="leadWebsite" class="small-mono">—</div>
+              </div>
+              <div class="col-12">
+                <div class="small text-muted-2">Email / Phone</div>
+                <div id="leadContact" class="small-mono">—</div>
+              </div>
+              <div class="col-12">
+                <div class="small text-muted-2">Next Follow-up</div>
+                <div id="leadNextFollowup" class="small-mono">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card p-3">
+          <div class="fw-semibold mb-2"><i class="bi bi-lightning-charge me-2"></i>Actions</div>
+
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <button id="btnDraft" class="btn btn-light w-100">
+                <i class="bi bi-magic"></i> Generate Draft
+              </button>
+            </div>
+            <div class="col-12 col-md-6">
+              <button id="btnLoadNotes" class="btn btn-outline-light w-100">
+                <i class="bi bi-journal-text"></i> Refresh Notes
+              </button>
+            </div>
+          </div>
+
+          <hr class="border-light opacity-10 my-3" />
+
+          <label class="form-label">WhatsApp Message (Demo Send)</label>
+          <textarea id="waMessage" class="form-control bg-dark text-light border-0" rows="4"
+            placeholder="Draft will appear here. You can edit before sending..."></textarea>
+
+          <div class="row g-2 mt-2 align-items-end">
+            <div class="col-6">
+              <label class="form-label mb-1">Next follow-up (days)</label>
+              <input id="waNextDays" type="number" class="form-control bg-dark text-light border-0" value="2" min="0" max="30">
+            </div>
+            <div class="col-6">
+              <button id="btnSendWA" class="btn btn-success w-100">
+                <i class="bi bi-whatsapp"></i> Send (Stub)
+              </button>
+            </div>
+          </div>
+
+          <hr class="border-light opacity-10 my-3" />
+
+          <label class="form-label">Complete Follow-up Note</label>
+          <textarea id="completeNote" class="form-control bg-dark text-light border-0" rows="3"
+            placeholder="What happened? e.g., 'Client asked for pricing, wants a demo tomorrow.'"></textarea>
+
+          <div class="row g-2 mt-2 align-items-end">
+            <div class="col-6">
+              <label class="form-label mb-1">Next follow-up (days)</label>
+              <input id="completeNextDays" type="number" class="form-control bg-dark text-light border-0" value="3" min="0" max="30">
+            </div>
+            <div class="col-6">
+              <label class="form-label mb-1">New Status (optional)</label>
+              <select id="completeStatus" class="form-select bg-dark text-light border-0">
+                <option value="">(keep / auto)</option>
+                <option value="contacted">contacted</option>
+                <option value="replied">replied</option>
+                <option value="demo">demo</option>
+                <option value="closed">closed</option>
+                <option value="lost">lost</option>
+                <option value="new">new</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <button id="btnComplete" class="btn btn-primary w-100">
+                <i class="bi bi-check2-circle"></i> Mark Follow-up Complete
+              </button>
+            </div>
+          </div>
+
+          <div id="actionStatus" class="small mt-3 text-muted-2"></div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      
+      <div class="col-12 col-lg-7">
+
+        <!-- Due Follow-ups -->
+        <div class="card p-3 mb-3">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+            <div class="fw-semibold">
+              <i class="bi bi-alarm me-2"></i>Due Follow-ups
+              <span class="badge badge-soft ms-2" id="dueCount">—</span>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap justify-content-end">
+              <input id="dueSearch" class="form-control form-control-sm bg-dark text-light border-0"
+                     style="max-width: 260px;" placeholder="Search company / email / status">
+              <select id="dueStatusFilter" class="form-select form-select-sm bg-dark text-light border-0"
+                      style="max-width: 200px;">
+                <option value="">All statuses</option>
+                <option value="new">new</option>
+                <option value="contacted">contacted</option>
+                <option value="replied">replied</option>
+                <option value="demo">demo</option>
+                <option value="closed">closed</option>
+                <option value="lost">lost</option>
+              </select>
+              <button id="btnRefreshDue" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0 table-dark table-borderless">
+              <thead class="text-muted-2">
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th>Company</th>
+                  <th style="width: 110px;">Status</th>
+                  <th style="width: 190px;">Next Follow-up</th>
+                  <th style="width: 250px;" class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dueTableBody">
+                <tr><td colspan="5" class="text-muted-2">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="small text-muted-2 mt-2" id="dueMeta">—</div>
+        </div>
+
+        <!-- Draft output -->
+        <div class="card p-3 mb-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold"><i class="bi bi-file-earmark-text me-2"></i>AI Draft Output</div>
+            <div class="small text-muted-2" id="draftMeta">—</div>
+          </div>
+          <pre id="draftOutput">Generate a draft to see the AI response here.</pre>
+        </div>
+
+        <!-- Notes -->
+        <div class="card p-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold"><i class="bi bi-journals me-2"></i>Lead Notes</div>
+            <div class="small text-muted-2" id="notesMeta">—</div>
+          </div>
+
+          <div id="notesList" class="text-muted-2">
+            Select a lead to load notes.
+          </div>
+        </div>
+<button id="btnRefreshTrace" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+          </div>
+          <div class="small text-muted-2 mb-2">Non-technical explanation of why LeadPro chose this action.</div>
+          <pre id="traceOut">—</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-muted-2 small mt-4">
+      LeadPro AI Demo • Built with Bootstrap 5 + jQuery • Connect to FastAPI backend
+    </div>
+  </div>
+
+  <!-- jQuery + Bootstrap -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  
+  <script>
+    // ---------- Helpers ----------
+    function apiBase() {
+      // Same-origin by default (blank)
+      const v = ($("#apiBase").val() || "").trim();
+      return v ? v.replace(/\/+$/, "") : "";
+    }
+    function api(path) {
+      return `${apiBase()}${path}`;
+    }
+
+    function setStatus(el, html, kind = "muted") {
+      const cls = kind === "ok" ? "text-success" :
+                  kind === "err" ? "text-danger" :
+                  kind === "warn" ? "text-warning" : "text-muted-2";
+      $(el).removeClass("text-success text-danger text-warning text-muted-2").addClass(cls).html(html);
+    }
+
+    function fmt(dt) {
+      if (!dt) return "—";
+      try { return new Date(dt).toLocaleString(); } catch { return dt; }
+    }
+
+    function selectedLeadId() {
+      const v = $("#leadSelect").val();
+      return v ? parseInt(v, 10) : null;
+    }
+
+    function escapeHtml(text) {
+      if (text == null) return "";
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;")
+        .replace(/\n/g, "<br>");
+    }
+
+    // -------------------- Due Follow-ups Dashboard --------------------
+    let _dueCache = [];
+
+    function normalizeDueResponse(data) {
+      if (Array.isArray(data)) return data;
+      return data.leads || data.items || data.results || [];
+    }
+
+    function matchesDueFilters(lead) {
+      const q = ($("#dueSearch").val() || "").trim().toLowerCase();
+      const statusFilter = ($("#dueStatusFilter").val() || "").trim().toLowerCase();
+
+      if (statusFilter && (lead.status || "").toLowerCase() !== statusFilter) return false;
+
+      if (!q) return true;
+      const hay = [
+        lead.company,
+        lead.website,
+        lead.email,
+        lead.phone,
+        lead.status
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      return hay.includes(q);
+    }
+
+    function renderDueTable() {
+      const rows = _dueCache.filter(matchesDueFilters);
+
+      $("#dueCount").text(rows.length);
+      $("#dueMeta").text(`Showing ${rows.length} due leads`);
+
+      if (!rows.length) {
+        $("#dueTableBody").html(`<tr><td colspan="5" class="text-muted-2">No due follow-ups found.</td></tr>`);
+        return;
+      }
+
+      const html = rows.map(l => {
+        const next = fmt(l.next_followup_at);
+        const status = (l.status || "—");
+        const company = (l.company || "—");
+
+        return `
+          <tr>
+            <td class="small-mono">${l.id}</td>
+            <td>
+              <div class="fw-semibold">${escapeHtml(company)}</div>
+              <div class="small text-muted-2">${escapeHtml(l.email || l.website || "—")}</div>
+            </td>
+            <td><span class="badge badge-soft">${escapeHtml(status)}</span></td>
+            <td class="small-mono">${next}</td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-light due-select" data-id="${l.id}" title="Select Lead">
+                  <i class="bi bi-cursor"></i>
+                </button>
+                <button class="btn btn-outline-light due-draft" data-id="${l.id}" title="Generate Draft">
+                  <i class="bi bi-magic"></i> Draft
+                </button>
+                <button class="btn btn-success due-send" data-id="${l.id}" title="Send WhatsApp (stub)">
+                  <i class="bi bi-whatsapp"></i> Send
+                </button>
+                <button class="btn btn-primary due-complete" data-id="${l.id}" title="Complete Follow-up">
+                  <i class="bi bi-check2-circle"></i> Complete
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      $("#dueTableBody").html(html);
+    }
+
+    async function loadDueFollowups() {
+      $("#dueTableBody").html(`<tr><td colspan="5" class="text-muted-2">Loading…</td></tr>`);
+      $("#dueMeta").text("Loading due follow-ups…");
+
+      try {
+        const r = await fetch(api(`/api/v1/followups/due?limit=50`));
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+        const data = await r.json();
+        _dueCache = normalizeDueResponse(data);
+
+        renderDueTable();
+        setStatus("#actionStatus", "✅ Due follow-ups loaded.", "ok");
+      } catch (e) {
+        $("#dueTableBody").html(`<tr><td colspan="5" class="text-danger">Failed: ${escapeHtml(String(e))}</td></tr>`);
+        $("#dueMeta").text("—");
+        setStatus("#actionStatus", `❌ Failed to load due follow-ups: ${escapeHtml(String(e))}`, "err");
+      }
+    }
+
+    // ---------- API Calls ----------
+    async function ping() {
+      setStatus("#pingStatus", "Pinging…", "warn");
+      try {
+        const r = await fetch(api(`/`));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        setStatus("#pingStatus", `✅ Connected: <span class="small-mono">${escapeHtml(JSON.stringify(data))}</span>`, "ok");
+      } catch (e) {
+        setStatus("#pingStatus", `❌ Cannot reach API at <span class="small-mono">${escapeHtml(apiBase() || "(same-origin)")}</span> (${escapeHtml(String(e))})`, "err");
+      }
+    }
+
+    async function loadKpis() {
+      // Supports either /dashboard/kpis OR /dashboard/summary (fallback)
+      try {
+        let r = await fetch(api(`/api/v1/dashboard/kpis`));
+        if (!r.ok) {
+          r = await fetch(api(`/api/v1/dashboard/summary`));
+        }
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+
+        const data = await r.json();
+
+        const total = data.total_leads ?? data.total ?? data.leads_total;
+        const hot = data.hot_leads ?? data.hot ?? data.hot_total;
+        const conv = data.conversion_pct ?? data.conversion ?? data.conversion_percent;
+        const rev = data.revenue_forecast ?? data.revenue ?? data.forecast;
+
+        $("#kpiTotalLeads").text(total ?? "—");
+        $("#kpiHotLeads").text(hot ?? "—");
+        $("#kpiConversion").text(conv == null ? "—" : `${conv}%`);
+        $("#kpiRevenue").text(rev ?? "—");
+      } catch (e) {
+        // Keep UI stable; log for dev
+        console.error("KPI load failed:", e);
+      }
+    }
+
+    async function loadLeads() {
+      $("#leadSelect").html(`<option value="">Loading…</option>`);
+      try {
+        const r = await fetch(api(`/api/v1/leads?limit=200&offset=0`));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const leads = Array.isArray(data) ? data : (data.leads || data.items || data.results || []);
+
+        if (!leads.length) {
+          $("#leadSelect").html(`<option value="">No leads found</option>`);
+          clearLeadUI();
+          return;
+        }
+
+        const opts = [`<option value="">Select a lead…</option>`]
+          .concat(leads.map(l => {
+            const label = `${l.id} • ${l.company} • ${l.status || "—"}`;
+            return `<option value="${l.id}">${escapeHtml(label)}</option>`;
+          }));
+
+        $("#leadSelect").html(opts.join(""));
+        clearLeadUI();
+        setStatus("#actionStatus", "Leads loaded. Select one to continue.", "ok");
+      } catch (e) {
+        $("#leadSelect").html(`<option value="">Error loading leads</option>`);
+        setStatus("#actionStatus", `❌ Failed to load leads: ${escapeHtml(String(e))}`, "err");
+      }
+    }
+
+    function clearLeadUI() {
+      $("#leadStatus,#leadScore,#leadCompany,#leadWebsite,#leadContact,#leadNextFollowup").text("—");
+      $("#notesList").html(`<div class="text-muted-2">Select a lead to load notes.</div>`);
+      $("#notesMeta").text("—");
+      $("#draftOutput").text("Generate a draft to see the AI response here.");
+      $("#draftMeta").text("—");
+      $("#waMessage").val("");
+      $("#completeNote").val("");
+      $("#traceOut").text("Select a lead to view trace.");
+    }
+
+    async function loadLeadDetailsAndNotes(leadId) {
+      if (!leadId) { clearLeadUI(); return; }
+
+      try {
+        const r = await fetch(api(`/api/v1/leads?limit=200&offset=0`));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const leads = Array.isArray(data) ? data : (data.leads || data.items || data.results || []);
+        const lead = leads.find(x => x.id === leadId);
+
+        if (lead) {
+          $("#leadStatus").text(lead.status ?? "—");
+          $("#leadScore").text(lead.score ?? "—");
+          $("#leadCompany").text(lead.company ?? "—");
+          $("#leadWebsite").text(lead.website ?? "—");
+          $("#leadContact").text(`${lead.email ?? "—"}  |  ${lead.phone ?? "—"}`);
+          $("#leadNextFollowup").text(fmt(lead.next_followup_at));
+        }
+
+        await loadNotes(leadId);
+        await loadTrace(); // update trace when lead changes
+      } catch (e) {
+        setStatus("#actionStatus", `❌ Failed to load lead details: ${escapeHtml(String(e))}`, "err");
+      }
+    }
+
+    async function loadNotes(leadId) {
+      $("#notesList").html(`<div class="text-muted-2">Loading notes…</div>`);
+
+      try {
+        const r = await fetch(api(`/api/v1/leads/${leadId}/notes`));
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+        const notes = await r.json();
+
+        if (!Array.isArray(notes) || notes.length === 0) {
+          $("#notesList").html(`<div class="text-muted-2">No notes yet.</div>`);
+          $("#notesMeta").text("0 notes");
+          return;
+        }
+
+        // Hide system automation notes
+        const hiddenPrefixes = ["[LeadQualification]", "[SalesAutomation]"];
+
+        const visibleNotes = notes.filter(n => {
+          const text = String(n.note ?? n.content ?? n.message ?? n.text ?? "").trim();
+          if (!text) return false;
+          return !hiddenPrefixes.some(p => text.startsWith(p));
+        });
+
+        $("#notesMeta").text(`${visibleNotes.length} notes`);
+
+        if (visibleNotes.length === 0) {
+          $("#notesList").html(`<div class="text-muted-2">No visible notes (system notes hidden).</div>`);
+          return;
+        }
+
+        const html = visibleNotes.map(n => {
+          const text = String(n.note ?? n.content ?? n.message ?? n.text ?? "").trim();
+          return `
+            <div class="note-item">
+              <div class="small text-muted-2">${fmt(n.created_at)}</div>
+              <div class="mt-1">${escapeHtml(text)}</div>
+            </div>
+          `;
+        }).join("");
+
+        $("#notesList").html(html);
+      } catch (e) {
+        $("#notesList").html(`<div class="text-danger">Failed to load notes: ${escapeHtml(String(e))}</div>`);
+      }
+    }
+
+    async function generateDraft(leadId) {
+      setStatus("#actionStatus", "Generating draft…", "warn");
+      $("#draftMeta").text("Generating…");
+      $("#draftOutput").text("Please wait…");
+
+      try {
+        const r = await fetch(api(`/api/v1/followups/${leadId}/draft`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ k_notes: 5, k_memory: 3, save_as_note: true })
+        });
+
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+
+        const data = await r.json();
+        const draft = data.draft || "(No draft returned)";
+        $("#draftOutput").text(draft);
+        $("#draftMeta").text(`Saved note_id: ${data.saved_note_id ?? "—"}`);
+
+        const waGuess = extractWhatsAppDraft(draft) || draft.slice(0, 300);
+        $("#waMessage").val(waGuess);
+
+        setStatus("#actionStatus", "✅ Draft generated & saved as note.", "ok");
+        await loadNotes(leadId);
+        await loadDueFollowups();
+        await loadKpis();
+        await loadTrace();
+      } catch (e) {
+        $("#draftOutput").text("");
+        $("#draftMeta").text("—");
+        setStatus("#actionStatus", `❌ Draft failed: ${escapeHtml(String(e))}`, "err");
+      }
+    }
+
+    function extractWhatsAppDraft(text) {
+      const t = String(text || "");
+      const patterns = [
+        /WhatsApp follow-up\s*\(Soft\)[\s\S]*?(?=\n\s*WhatsApp follow-up|\n\s*Email follow-up|\n\s*CTA|\n\s*If they reply|$)/i,
+        /WhatsApp.*?Soft[\s\S]*?(?=\n\s*WhatsApp|\n\s*Email|\n\s*CTA|\n\s*If they reply|$)/i
+      ];
+      for (const p of patterns) {
+        const m = t.match(p);
+        if (m && m[0]) return m[0].replace(/^.*?:\s*/i, "").trim().slice(0, 400);
+      }
+      return "";
+    }
+
+    async function sendWhatsAppStub(leadId) {
+      const message = ($("#waMessage").val() || "").trim();
+      const nextDays = parseInt($("#waNextDays").val(), 10);
+      const next_followup_in_days = Number.isFinite(nextDays) ? nextDays : 2;
+
+      if (!message) {
+        setStatus("#actionStatus", "⚠️ WhatsApp message is empty.", "warn");
+        return;
+      }
+
+      setStatus("#actionStatus", "Sending WhatsApp (stub)…", "warn");
+
+      try {
+        const r = await fetch(api(`/api/v1/whatsapp/send?lead_id=${leadId}`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, next_followup_in_days })
+        });
+
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+
+        const data = await r.json();
+        setStatus("#actionStatus",
+          `✅ WhatsApp (stub) logged. note_id=${data.note_id ?? "—"} • next_followup=${fmt(data.next_followup_at)}`, "ok"
+        );
+
+        await loadLeadDetailsAndNotes(leadId);
+        await loadDueFollowups();
+        await loadKpis();
+        await loadTrace();
+      } catch (e) {
+        setStatus("#actionStatus", `❌ WhatsApp send failed: ${escapeHtml(String(e))}`, "err");
+      }
+    }
+
+    async function completeFollowup(leadId) {
+      const note = ($("#completeNote").val() || "").trim();
+      const nextDays = parseInt($("#completeNextDays").val(), 10);
+      const next_followup_in_days = Number.isFinite(nextDays) ? nextDays : 2;
+      const newStatus = ($("#completeStatus").val() || "").trim() || null;
+
+      if (!note) {
+        setStatus("#actionStatus", "⚠️ Completion note is required.", "warn");
+        return;
+      }
+
+      setStatus("#actionStatus", "Marking follow-up complete…", "warn");
+
+      try {
+        const r = await fetch(api(`/api/v1/followups/${leadId}/complete`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note, next_followup_in_days, new_status: newStatus })
+        });
+
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+
+        const data = await r.json();
+        setStatus("#actionStatus",
+          `✅ Completed. status=${data.lead?.status ?? "—"} • next_followup=${fmt(data.lead?.next_followup_at)}`, "ok"
+        );
+
+        $("#completeNote").val("");
+        await loadLeadDetailsAndNotes(leadId);
+        await loadDueFollowups();
+        await loadKpis();
+        await loadTrace();
+      } catch (e) {
+        setStatus("#actionStatus", `❌ Complete failed: ${escapeHtml(String(e))}`, "err");
+      }
+    }
+
+    // ---------- AI Decision Trace ----------
+    async function loadTrace() {
+      const show = $("#toggleTrace").is(":checked");
+      if (!show) { $("#traceCard").hide(); return; }
+      $("#traceCard").show();
+
+      const leadId = selectedLeadId();
+      if (!leadId) { $("#traceOut").text("Select a lead to view trace."); return; }
+
+      try {
+        const r = await fetch(api(`/api/v1/traces?lead_id=${leadId}&limit=1`));
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+        const j = await r.json();
+
+        const t = (j.traces && j.traces[0]) ? (j.traces[0].trace ?? j.traces[0]) : null;
+        $("#traceOut").text(
+          t ? JSON.stringify(t, null, 2)
+            : "No trace yet. Generate a Draft or Send WhatsApp to create one."
+        );
+      } catch (e) {
+        $("#traceOut").text("Trace unavailable (backend did not return trace).");
+        console.error("Trace load failed:", e);
+      }
+    }
+
+    // ---------- UI bindings ----------
+    $(async function() {
+      $("#btnPing").on("click", ping);
+      $("#btnRefreshLeads").on("click", loadLeads);
+      $("#btnRefreshDue").on("click", loadDueFollowups);
+      $("#btnRefreshTrace").on("click", loadTrace);
+      $("#toggleTrace").on("change", loadTrace);
+
+      $("#dueSearch").on("input", renderDueTable);
+      $("#dueStatusFilter").on("change", renderDueTable);
+
+      $("#leadSelect").on("change", async function() {
+        const id = selectedLeadId();
+        await loadLeadDetailsAndNotes(id);
+      });
+
+      $("#btnLoadNotes").on("click", async function() {
+        const id = selectedLeadId();
+        if (!id) return setStatus("#actionStatus", "⚠️ Select a lead first.", "warn");
+        await loadNotes(id);
+        setStatus("#actionStatus", "Notes refreshed.", "ok");
+      });
+
+      $("#btnDraft").on("click", async function() {
+        const id = selectedLeadId();
+        if (!id) return setStatus("#actionStatus", "⚠️ Select a lead first.", "warn");
+        await generateDraft(id);
+      });
+
+      $("#btnSendWA").on("click", async function() {
+        const id = selectedLeadId();
+        if (!id) return setStatus("#actionStatus", "⚠️ Select a lead first.", "warn");
+        await sendWhatsAppStub(id);
+      });
+
+      $("#btnComplete").on("click", async function() {
+        const id = selectedLeadId();
+        if (!id) return setStatus("#actionStatus", "⚠️ Select a lead first.", "warn");
+        await completeFollowup(id);
+      });
+
+      // Due follow-ups row actions
+      $(document).on("click", ".due-select", async function() {
+        const id = parseInt($(this).data("id"), 10);
+        $("#leadSelect").val(String(id)).trigger("change");
+        setStatus("#actionStatus", `Selected Lead #${id}`, "ok");
+      });
+
+      $(document).on("click", ".due-draft", async function() {
+        const id = parseInt($(this).data("id"), 10);
+        await generateDraft(id);
+      });
+
+      $(document).on("click", ".due-send", async function() {
+        const id = parseInt($(this).data("id"), 10);
+        if (!($("#waMessage").val() || "").trim()) await generateDraft(id);
+        await sendWhatsAppStub(id);
+      });
+
+      $(document).on("click", ".due-complete", async function() {
+        const id = parseInt($(this).data("id"), 10);
+        if (!($("#completeNote").val() || "").trim()) {
+          $("#completeNote").val("Follow-up completed via Due Follow-ups dashboard.");
+        }
+        await completeFollowup(id);
+      });
+
+      // Initial load
+      await ping();
+      await loadLeads();
+      await loadDueFollowups();
+      await loadKpis();
+      await loadTrace();
+    });
+  </script>
+
+</body>
+</html>
