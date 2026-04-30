@@ -29,3 +29,5 @@ project/dbs/*.db
 .env
 .env.local
 .env.*.local
+log.txt
+nohup.out
