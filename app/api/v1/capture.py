@@ -587,15 +587,6 @@ def toggle_ai_reply(
 
 # ══════════════════════════════════════════════════════════════════════════════
 # EMBEDDABLE WIDGETS
-# ─────────────────────────────────────────────────────────────────────────────
-# All widget endpoints now serve SELF-CONTAINED inline JavaScript.
-# No separate static file serving required.
-#
-# Routes:
-#   GET /capture/{slug}/widget.js           — smart: ?mode=both|whatsapp|form
-#   GET /capture/{slug}/whatsapp.js         — WhatsApp-only (alias)
-#   GET /capture/{slug}/form-widget.js      — Form-only (alias)
-#   GET /capture/{slug}/form.html           — Standalone form page (iframe)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @router.get("/capture/{company_slug}/widget.js", response_class=Response)
@@ -604,22 +595,11 @@ def get_widget_js(
     request: Request,
     master_db: Session = Depends(get_master_db),
 ):
-    """
-    Smart widget endpoint — reads ?mode= to serve the correct widget(s) inline.
-      ?mode=both       (default) — WhatsApp + Lead Form
-      ?mode=whatsapp   — WhatsApp button only
-      ?mode=form       — Lead form only
-    """
     company = _get_company_or_404(company_slug, master_db)
     lang, direction = _widget_locale(company, request)
-
-    # Strip Twilio/Meta "whatsapp:" prefix and leading "+" so wa.me URLs work
     wa_phone = (company.wa_phone_from or "").replace("whatsapp:", "").strip().lstrip("+")
-
     mode = (request.query_params.get("mode") or "both").strip().lower()
 
-    # Prefer X-Forwarded-Host so the widget's API calls resolve correctly
-    # when running behind a reverse proxy (nginx / Caddy / etc.)
     forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip()
     forwarded_host  = request.headers.get("x-forwarded-host",  "").split(",")[0].strip()
     if forwarded_proto and forwarded_host:
@@ -627,7 +607,6 @@ def get_widget_js(
     else:
         base = str(request.base_url).rstrip("/")
 
-    # Guard: whatsapp mode requires a configured phone number
     if mode == "whatsapp" and not wa_phone:
         logger.warning(f"[widget.js] mode=whatsapp requested for '{company_slug}' but wa_phone_from is not set")
         return Response(
@@ -746,7 +725,6 @@ _SEND_SVG = (
     "</svg>"
 )
 
-# Shared CSS injected into every widget (namespaced to avoid host-page conflicts)
 _WIDGET_CSS = r"""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -796,10 +774,9 @@ _WIDGET_CSS = r"""
 .lpw-wa-fab:hover{box-shadow:0 14px 40px rgba(37,211,102,.6)}
 
 /* Form FAB */
-.lpw-form-fab{
-  border-radius:16px !important;
-  background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);
-  box-shadow:0 6px 22px rgba(99,102,241,.45);
+.lpw-form-fab{border-radius: 16px !important;
+    background: linear-gradient(135deg, #ff8964 0%, #e85222 100%) !important;
+    box-shadow: 0 6px 22px rgba(99, 102, 241, .45);
 }
 .lpw-form-fab .lpw-ring{border-radius:20px !important;background:rgba(99,102,241,.2)}
 .lpw-form-fab:hover{box-shadow:0 12px 32px rgba(99,102,241,.6)}
@@ -815,12 +792,18 @@ _WIDGET_CSS = r"""
 @keyframes lpw-pop{from{transform:scale(0)}to{transform:scale(1)}}
 
 /* Panel */
-.lpw-panel{
-  width:340px;max-width:calc(100vw - 28px);
-  border-radius:20px;overflow:hidden;background:#fff;
-  box-shadow:0 20px 70px rgba(0,0,0,.18),0 6px 20px rgba(0,0,0,.08);
-  display:none;
-  animation:lpw-in .3s cubic-bezier(.34,1.4,.64,1);
+.lpw-panel {
+    width: 340px;
+    max-width: calc(100vw - 28px);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, .18), 0 6px 20px rgba(0, 0, 0, .08);
+    display: none;
+    animation: lpw-in .3s cubic-bezier(.34, 1.4, .64, 1);
+    position: absolute;
+    bottom: 0;
+    right: 70px;
 }
 .lpw-panel.open{display:block}
 @keyframes lpw-in{
@@ -835,7 +818,9 @@ _WIDGET_CSS = r"""
   height:28px;background:#fff;border-radius:28px 28px 0 0;
 }
 .lpw-hdr.green{background:linear-gradient(135deg,#25D366 0%,#128C5E 100%)}
-.lpw-hdr.purple{background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%)}
+.lpw-hdr.purple {
+    background: linear-gradient(135deg, #ff8964 0%, #e85222 100%) !important;
+}
 .lpw-hdr-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
 .lpw-hdr-info{display:flex;align-items:center;gap:10px}
 .lpw-avatar{
@@ -915,9 +900,9 @@ select.lpw-inp{
   box-shadow:0 6px 20px rgba(37,211,102,.35);
 }
 .lpw-btn.green:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,211,102,.5)}
-.lpw-btn.purple{
-  background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%) !important;
-  box-shadow:0 6px 20px rgba(99,102,241,.35);
+.lpw-btn.purple {
+    background: linear-gradient(135deg, #ff8964 0%, #e85222 100%) !important;
+    box-shadow: 0 6px 20px #ffd7ca;
 }
 .lpw-btn.purple:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(99,102,241,.5)}
 .lpw-btn:active{transform:scale(.98) !important}
@@ -956,7 +941,7 @@ select.lpw-inp{
 .lpw-wa-body p{font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5}
 
 @media(max-width:480px){
-  .lpw-panel{width:calc(100vw - 20px) !important}
+  .lpw-panel{width:calc(100vw - 20px) !important; right: 0px;z-index: 999;}
   .lpw-row{grid-template-columns:1fr}
 }
 """
@@ -989,7 +974,7 @@ def _wa_url(phone: str, company_name: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# WIDGET BUILDERS — each returns a complete, self-contained IIFE JS string
+# WIDGET BUILDERS
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _build_whatsapp_widget(
@@ -999,16 +984,10 @@ def _build_whatsapp_widget(
     api_base: str,
     direction: str = "ltr",
 ) -> str:
-    """
-    WhatsApp-only floating button widget.
-    Clicking the FAB opens WhatsApp directly (no popup).
-    Also fires a tracking POST to the API if visitor phone is available.
-    """
     is_left = direction == "rtl"
     side = "left:20px" if is_left else "right:20px"
     wa_href = _wa_url(wa_phone or "14155238886", company_name)
     slug_safe = _js_escape(company_slug)
-    api_safe  = _js_escape(api_base)
 
     root_css = (
         f"position:fixed;bottom:24px;{side};z-index:2147483647;"
@@ -1046,7 +1025,6 @@ def _build_whatsapp_widget(
   document.getElementById('lpw-wa-fab').addEventListener('click',function(){{
     var bdg=document.getElementById('lpw-wa-bdg');
     if(bdg)bdg.style.display='none';
-    // Fire tracking (best-effort)
     try{{
       fetch({json.dumps(api_base)}+'/api/v1/capture/{slug_safe}/whatsapp-click',{{
         method:'POST',
@@ -1068,12 +1046,10 @@ def _build_form_widget(
     courses: str = "Admissions,Live classes,Online program,Pricing,Other",
     offset: int = 24,
 ) -> str:
-    """Lead enquiry form floating widget — form-only."""
+    """Lead enquiry form floating widget — form-only. Message textarea removed."""
     is_left = direction == "rtl"
     side = "left:20px" if is_left else "right:20px"
     slug_safe = _js_escape(company_slug)
-    api_safe  = _js_escape(api_base)
-    cn_safe   = _js_escape(company_name)
 
     root_css = (
         f"position:fixed;bottom:{offset}px;{side};z-index:2147483646;"
@@ -1088,12 +1064,11 @@ def _build_form_widget(
 
     css = _WIDGET_CSS + f"#lpw-form-root{{{root_css}}}"
 
-    send_icon = _SEND_SVG
-    form_icon = _FORM_SVG
+    send_icon  = _SEND_SVG
+    form_icon  = _FORM_SVG
     close_icon = _CLOSE_ICON
-    user_icon = _USER_SVG
+    user_icon  = _USER_SVG
     check_icon = _CHECK_SVG
-    wa_icon = _WA_SVG
 
     return f"""
 (function(){{
@@ -1118,7 +1093,6 @@ def _build_form_widget(
     +'</div>'
     +'<button class="lpw-close" id="lpw-fc" aria-label="Close">' + {json.dumps(close_icon)} + '</button>'
     +'</div>'
-    +'<div class="lpw-online"><span class="lpw-dot"></span><span>Online now</span></div>'
     +'</div>'
     +'<div class="lpw-body">'
     +'<div id="lpw-ff">'
@@ -1135,8 +1109,6 @@ def _build_form_widget(
     +'<option value="">Choose a course\u2026</option>'
     +{json.dumps(opts)}
     +'</select></div>'
-    +'<div class="lpw-g"><label class="lpw-lbl">Message</label>'
-    +'<textarea id="lpw-fm" class="lpw-inp" placeholder="Tell us what you\u2019re looking for\u2026"></textarea></div>'
     +'<button id="lpw-fsub" class="lpw-btn purple">'
     + {json.dumps(send_icon)} + ' Send Enquiry'
     +'</button>'
@@ -1180,8 +1152,7 @@ def _build_form_widget(
       body:JSON.stringify({{
         name:name,phone:phone,
         email:document.getElementById('lpw-fe').value.trim(),
-        course:document.getElementById('lpw-fc2').value,
-        message:document.getElementById('lpw-fm').value.trim()
+        course:document.getElementById('lpw-fc2').value
       }})
     }})
     .then(function(r){{return r.json();}})
@@ -1201,12 +1172,9 @@ def _build_combined_widget(
     api_base: str,
     wa_phone: str,
     direction: str = "ltr",
-    courses: str = "Admissions,Live classes,Online program,Pricing,Other",
+    courses: str = "MBA, Law, IPM, BBA, CUET, Tutions, Study Abroad",
 ) -> str:
-    """
-    Combined widget — WhatsApp FAB (bottom) + Form FAB (above it).
-    Each FAB opens its own panel independently.
-    """
+    """Combined widget — WhatsApp FAB + Form FAB. Message textarea removed."""
     is_left = direction == "rtl"
     side = "left:20px" if is_left else "right:20px"
     slug_safe = _js_escape(company_slug)
@@ -1256,7 +1224,6 @@ def _build_combined_widget(
     +'</div>'
     +'<button class="lpw-close" id="lpw-wac" aria-label="Close">' + {json.dumps(close_icon)} + '</button>'
     +'</div>'
-    +'<div class="lpw-online"><span class="lpw-dot"></span><span>Online now</span></div>'
     +'</div>'
     +'<div class="lpw-wa-body">'
     +'<div class="lpw-wa-icon">' + {json.dumps(wa_icon)} + '</div>'
@@ -1278,7 +1245,6 @@ def _build_combined_widget(
     +'</div>'
     +'<button class="lpw-close" id="lpw-foc" aria-label="Close">' + {json.dumps(close_icon)} + '</button>'
     +'</div>'
-    +'<div class="lpw-online"><span class="lpw-dot"></span><span>Online now</span></div>'
     +'</div>'
     +'<div class="lpw-body">'
     +'<div id="lpw-cff">'
@@ -1295,8 +1261,6 @@ def _build_combined_widget(
     +'<option value="">Choose a course\u2026</option>'
     +{json.dumps(opts)}
     +'</select></div>'
-    +'<div class="lpw-g"><label class="lpw-lbl">Message</label>'
-    +'<textarea id="lpw-cm" class="lpw-inp" placeholder="Tell us what you\u2019re looking for\u2026"></textarea></div>'
     +'<button id="lpw-csub" class="lpw-btn purple">'
     + {json.dumps(send_icon)} + ' Send Enquiry'
     +'</button>'
@@ -1328,17 +1292,18 @@ def _build_combined_widget(
     document.getElementById('lpw-fop').classList.remove('open');
   }}
 
-  /* WhatsApp FAB */
+/* WhatsApp FAB — open directly in new tab */
   document.getElementById('lpw-wfab').addEventListener('click',function(e){{
     e.stopPropagation();
-    var wap=document.getElementById('lpw-wap');
-    var wasOpen=wap.classList.contains('open');
-    closeAll();
-    if(!wasOpen){{
-      wap.classList.add('open');
-      var bdg=document.getElementById('lpw-wbdg');
-      if(bdg)bdg.style.display='none';
-    }}
+    var bdg=document.getElementById('lpw-wbdg');
+    if(bdg)bdg.style.display='none';
+    try{{
+      fetch({json.dumps(api_base)}+'/api/v1/capture/{slug_safe}/whatsapp-click',{{
+        method:'POST',headers:{{'Content-Type':'application/json'}},
+        body:JSON.stringify({{phone:'',message:'WhatsApp widget click',page_url:window.location.href}})
+      }}).catch(function(){{}});
+    }}catch(e){{}}
+    window.open({json.dumps(wa_href)},'_blank','noopener,noreferrer');
   }});
 
   /* Form FAB */
@@ -1384,8 +1349,7 @@ def _build_combined_widget(
       body:JSON.stringify({{
         name:name,phone:phone,
         email:document.getElementById('lpw-ce').value.trim(),
-        course:document.getElementById('lpw-cc').value,
-        message:document.getElementById('lpw-cm').value.trim()
+        course:document.getElementById('lpw-cc').value
       }})
     }})
     .then(function(r){{return r.json();}})
@@ -1423,9 +1387,8 @@ body{{background:#f1f5f9;display:flex;align-items:center;justify-content:center;
 h2{{font-size:22px;font-weight:800;color:#1e293b;letter-spacing:-.3px}}
 .sub{{font-size:13px;color:#64748b;margin:6px 0 24px;line-height:1.5}}
 label{{display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}}
-input,select,textarea{{width:100%;padding:12px 14px;border:1.5px solid #eef0f6;border-radius:12px;font-size:14px;color:#1e293b;background:#f7f8fc;outline:none;transition:all .2s;font-family:inherit;margin-bottom:16px}}
-input:focus,select:focus,textarea:focus{{border-color:#6366f1;background:#fff;box-shadow:0 0 0 4px rgba(99,102,241,.1)}}
-textarea{{resize:none;height:80px}}
+input,select{{width:100%;padding:12px 14px;border:1.5px solid #eef0f6;border-radius:12px;font-size:14px;color:#1e293b;background:#f7f8fc;outline:none;transition:all .2s;font-family:inherit;margin-bottom:16px}}
+input:focus,select:focus{{border-color:#6366f1;background:#fff;box-shadow:0 0 0 4px rgba(99,102,241,.1)}}
 select{{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M.5.5l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}}
 button{{width:100%;padding:14px;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s}}
 button:hover{{box-shadow:0 4px 16px rgba(99,102,241,.35);transform:translateY(-1px)}}
@@ -1446,7 +1409,6 @@ button:hover{{box-shadow:0 4px 16px rgba(99,102,241,.35);transform:translateY(-1
     <label>Email</label><input id="fe" type="email" placeholder="you@email.com">
     <label>Course interest</label>
     <select id="fc"><option value="">Select...</option><option>CAT Preparation</option><option>CUET</option><option>IPM / BBA</option><option>CLAT / Law</option><option>GMAT / GRE</option><option>Other</option></select>
-    <label>Message</label><textarea id="fm" placeholder="Any question or requirement..."></textarea>
     <button onclick="go()">Send enquiry</button>
   </div>
   <div id="ok" class="ok" style="display:none">
@@ -1461,7 +1423,7 @@ function go(){{
   if(!n||!p){{alert('Please fill name and phone.');return;}}
   fetch('{api_base}/api/v1/capture/{company_slug}/form',{{
     method:'POST',headers:{{'Content-Type':'application/json'}},
-    body:JSON.stringify({{name:n,phone:p,email:document.getElementById('fe').value,course:document.getElementById('fc').value,message:document.getElementById('fm').value}})
+    body:JSON.stringify({{name:n,phone:p,email:document.getElementById('fe').value,course:document.getElementById('fc').value}})
   }}).then(function(){{document.getElementById('fw').style.display='none';document.getElementById('ok').style.display='block';}}).catch(function(){{alert('Error. Please retry.');}});
 }}
 </script>

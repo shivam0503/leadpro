@@ -13,5 +13,5 @@ def install_error_handlers(app: FastAPI) -> None:
         # Avoid leaking internals in prod
         return JSONResponse(
             status_code=500,
-            content={"ok": False, "error": "internal_server_error", "request_id": rid},
+            content={"ok": False, "detail": "Internal server error", "error": "internal_server_error", "request_id": rid},
         )

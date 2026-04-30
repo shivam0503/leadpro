@@ -706,6 +706,25 @@ footer {
   .stat { border-right: none; border-bottom: 1px solid var(--border); }
   .stat:last-child { border-bottom: none; }
 }
+
+.lpw-btn.purple {
+    background: linear-gradient(135deg, #ff8964 0%, #e85222 100%) !important;
+    box-shadow: 0 6px 20px #ffd7ca;
+}
+
+.lpw-panel {
+    width: 340px;
+    max-width: calc(100vw - 28px);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, .18), 0 6px 20px rgba(0, 0, 0, .08);
+    display: none;
+    animation: lpw-in .3s cubic-bezier(.34, 1.4, .64, 1);
+    position: absolute;
+    bottom: 0;
+    right: 70px;
+}
 </style>
 </head>
 <body>
@@ -727,7 +746,7 @@ footer {
     <li><a href="#widgets">Widgets</a></li>
     <li><a href="#api">API</a></li>
   </ul>
-  <a href="/demo/superadmin.html" class="nav-cta">Open Dashboard →</a>
+  <a href="/superadmin.html" class="nav-cta">Open Dashboard →</a>
 </nav>
 
 <!-- HERO -->
@@ -995,7 +1014,7 @@ footer {
   <h2 class="reveal">Your AI sales team<br><span class="accent">is ready to deploy.</span></h2>
   <p class="section-sub reveal">Set up a new company, embed the widget, and let AI handle your WhatsApp leads — in under 10 minutes.</p>
   <div class="hero-actions reveal" style="justify-content:center; margin-top:44px">
-    <a href="/demo/superadmin.html" class="btn-primary">
+    <a href="/superadmin.html" class="btn-primary">
       <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#000"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       Open Admin Dashboard
     </a>
@@ -1013,8 +1032,8 @@ footer {
   </div>
   <div class="footer-links">
     <a href="/docs">API Docs</a>
-    <a href="/demo/superadmin.html">Super Admin</a>
-    <a href="/demo/dashboard.html">Dashboard</a>
+    <a href="/superadmin.html">Super Admin</a>
+    <a href="/dashboard.html">Dashboard</a>
   </div>
 </footer>
 

@@ -137,8 +137,16 @@ def get_current_user(
     # Regular company user — look up in company DB
     from app.services.database import _company_sessions
     slug = tp.company_slug
-    if not slug or slug not in _company_sessions:
+    if not slug:
         raise HTTPException(status_code=401, detail="Company not found")
+
+    # Auto-init company engine if server restarted and slug isn't cached yet
+    if slug not in _company_sessions:
+        from app.services.database import _get_company_engine, get_company_db_path
+        db_path = get_company_db_path(slug)
+        if not db_path.exists():
+            raise HTTPException(status_code=401, detail="Company not found")
+        _get_company_engine(slug)  # registers engine + session factory
 
     from app.db.company_models import User
     session_factory = _company_sessions[slug]

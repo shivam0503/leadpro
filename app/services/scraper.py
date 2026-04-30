@@ -10,6 +10,12 @@ from loguru import logger
 from playwright.async_api import async_playwright
 
 try:
+    import httpx
+    HTTPX_OK = True
+except ImportError:
+    HTTPX_OK = False
+
+try:
     from bs4 import BeautifulSoup
     BS4_OK = True
 except ImportError:
@@ -136,12 +142,11 @@ def _get_links(html: str, base_url: str) -> List[str]:
 async def _fetch_url(url: str) -> tuple[str, str]:
     async with async_playwright() as p:
         try:
-            browser = await p.chromium.launch(headless=True, channel="chrome")
-        except Exception:
-            browser = await p.chromium.launch(
-                headless=True,
-                executable_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-            )
+            # Use bundled Chromium (works on Linux/Mac/Windows without Chrome installed)
+            browser = await p.chromium.launch(headless=True)
+        except Exception as launch_err:
+            logger.error(f"Playwright launch failed: {launch_err}")
+            raise
 
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -153,21 +158,33 @@ async def _fetch_url(url: str) -> tuple[str, str]:
         await page.route("**/*.{png,jpg,jpeg,gif,webp,svg,woff,woff2,ttf,eot}",
                          lambda route: route.abort())
 
-        await page.goto(url, timeout=90000, wait_until="domcontentloaded")
+        await page.goto(url, timeout=60000, wait_until="networkidle")
 
         # Wait for product cards and price elements to render
         try:
-            await page.wait_for_selector("ol li, ul li, h3, h4", timeout=10000)
+            await page.wait_for_selector("ol li, ul li, h3, h4", timeout=8000)
         except Exception:
             pass
 
-        await page.wait_for_timeout(3500)
+        await page.wait_for_timeout(2000)
 
         content   = await page.content()
         final_url = page.url
 
         await browser.close()
         return content, final_url
+
+
+async def _fetch_url_httpx(url: str) -> tuple[str, str]:
+    """Lightweight fallback using httpx when Playwright is unavailable."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+        resp = await client.get(url, headers=headers)
+        resp.raise_for_status()
+        return resp.text, str(resp.url)
 
 
 # =========================
@@ -203,7 +220,20 @@ async def scrape_and_store(url: str, company_slug: str, crawl: bool = False) -> 
         try:
             logger.info(f"[{company_slug}] Scraping: {current_url}")
 
-            html, final_url = await _fetch_url(current_url)
+            # Try Playwright first; fall back to httpx for static pages
+            html, final_url = None, current_url
+            try:
+                html, final_url = await _fetch_url(current_url)
+            except Exception as pw_err:
+                logger.warning(f"Playwright failed for {current_url}: {pw_err}. Trying httpx…")
+                if HTTPX_OK:
+                    html, final_url = await _fetch_url_httpx(current_url)
+                else:
+                    raise
+
+            if not html:
+                logger.warning(f"Empty response for {current_url}")
+                continue
 
             if BS4_OK:
                 soup  = BeautifulSoup(html, "html.parser")
@@ -213,8 +243,9 @@ async def scrape_and_store(url: str, company_slug: str, crawl: bool = False) -> 
 
             text = _clean_text(html)
 
-            if len(text) < 200:
-                logger.warning(f"Skipping near-empty page: {final_url}")
+            # Lower threshold — some pages have short but valid content
+            if len(text) < 50:
+                logger.warning(f"Skipping near-empty page ({len(text)} chars): {final_url}")
                 continue
 
             chunks = _chunk_text(text)
