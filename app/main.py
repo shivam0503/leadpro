@@ -76,7 +76,7 @@ app.include_router(api_router, prefix="/api")
 # ── Root ──────────────────────────────────────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
 def root():
-    html_path = STATIC_DIR / "index.html"
+    html_path = STATIC_DIR / "dashboard.html"
     if html_path.exists():
         return FileResponse(str(html_path))
     return HTMLResponse("<h1>LeadPro AI CRM</h1>")
